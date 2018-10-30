@@ -23,6 +23,49 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.dataLabel.text = [self.dataObject description];
+    EKEventViewController *eventVC = [[EKEventViewController alloc] init];
+        [eventVC setEvent:self.dataObject];
+        [eventVC setDelegate:self];
+        [eventVC setAllowsCalendarPreview:TRUE];
+        [self addChild:eventVC withChildToRemove:nil];
+}
+
+- (void)eventEditViewController:(EKEventEditViewController *)controller
+          didCompleteWithAction:(EKEventEditViewAction)action
+{
+    [controller dismissViewControllerAnimated:TRUE completion:^{
+        
+    }];
+}
+
+- (void)addChild:(UIViewController *)childToAdd withChildToRemove:(UIViewController *)childToRemove
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    if (childToRemove != nil)
+    {
+        if ([childToRemove isKindOfClass:[EKEventViewController class]]) {
+            [childToRemove.view removeFromSuperview];
+            [childToRemove removeFromParentViewController];
+        }
+    }
+    
+    if (childToAdd != nil)
+    {
+        [self addChildViewController:childToAdd];
+        [childToAdd didMoveToParentViewController:self];
+        
+        if ([childToAdd isKindOfClass:[EKEventViewController class]]) {
+            // match the child size to its parent
+            CGRect frame = childToAdd.view.frame;
+            frame.size.height = CGRectGetHeight(self.containerView.frame);
+            frame.size.width = CGRectGetWidth(self.containerView.frame);
+            childToAdd.view.frame = frame;
+            
+            [self.containerView addSubview:childToAdd.view];
+        }
+    }
+    
+    NSLog(@"Number of child view controllers: %lu", self.childViewControllers.count);
 }
 
 

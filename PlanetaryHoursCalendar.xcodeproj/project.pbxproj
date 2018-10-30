@@ -15,6 +15,10 @@
 		B92815742183AB5A002177E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B92815732183AB5A002177E0 /* Assets.xcassets */; };
 		B92815772183AB5A002177E0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B92815752183AB5A002177E0 /* LaunchScreen.storyboard */; };
 		B928157A2183AB5A002177E0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B92815792183AB5A002177E0 /* main.m */; };
+		B92815832183D69A002177E0 /* EventKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B92815812183D699002177E0 /* EventKitUI.framework */; };
+		B92815842183D69A002177E0 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B92815822183D699002177E0 /* EventKit.framework */; };
+		B92D3B9321868C2E00D72791 /* PlanetaryHourDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */; };
+		B92D3BAB2186F94E00D72791 /* FESSolarCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,16 +26,22 @@
 		B92815642183AB59002177E0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B92815652183AB59002177E0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		B92815672183AB59002177E0 /* RootViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; };
-		B92815682183AB59002177E0 /* RootViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RootViewController.m; sourceTree = "<group>"; };
+		B92815682183AB59002177E0 /* RootViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RootViewController.m; sourceTree = "<group>"; wrapsLines = 0; };
 		B928156A2183AB59002177E0 /* DataViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataViewController.h; sourceTree = "<group>"; };
-		B928156B2183AB59002177E0 /* DataViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataViewController.m; sourceTree = "<group>"; };
+		B928156B2183AB59002177E0 /* DataViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataViewController.m; sourceTree = "<group>"; wrapsLines = 0; };
 		B928156D2183AB59002177E0 /* ModelController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ModelController.h; sourceTree = "<group>"; };
-		B928156E2183AB59002177E0 /* ModelController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ModelController.m; sourceTree = "<group>"; };
+		B928156E2183AB59002177E0 /* ModelController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ModelController.m; sourceTree = "<group>"; wrapsLines = 0; };
 		B92815712183AB59002177E0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B92815732183AB5A002177E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B92815762183AB5A002177E0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B92815782183AB5A002177E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B92815792183AB5A002177E0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		B92815812183D699002177E0 /* EventKitUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKitUI.framework; path = System/Library/Frameworks/EventKitUI.framework; sourceTree = SDKROOT; };
+		B92815822183D699002177E0 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
+		B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlanetaryHourDataSource.m; sourceTree = "<group>"; wrapsLines = 0; };
+		B92D3B9221868C2D00D72791 /* PlanetaryHourDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlanetaryHourDataSource.h; sourceTree = "<group>"; wrapsLines = 0; };
+		B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FESSolarCalculator.m; sourceTree = "<group>"; };
+		B92D3BAA2186F94E00D72791 /* FESSolarCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESSolarCalculator.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,6 +49,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B92815832183D69A002177E0 /* EventKitUI.framework in Frameworks */,
+				B92815842183D69A002177E0 /* EventKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,6 +62,7 @@
 			children = (
 				B92815632183AB59002177E0 /* PlanetaryHoursCalendar */,
 				B92815622183AB59002177E0 /* Products */,
+				B92815802183D699002177E0 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -64,6 +77,10 @@
 		B92815632183AB59002177E0 /* PlanetaryHoursCalendar */ = {
 			isa = PBXGroup;
 			children = (
+				B92D3BAA2186F94E00D72791 /* FESSolarCalculator.h */,
+				B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */,
+				B92D3B9221868C2D00D72791 /* PlanetaryHourDataSource.h */,
+				B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */,
 				B92815642183AB59002177E0 /* AppDelegate.h */,
 				B92815652183AB59002177E0 /* AppDelegate.m */,
 				B92815672183AB59002177E0 /* RootViewController.h */,
@@ -79,6 +96,15 @@
 				B92815792183AB5A002177E0 /* main.m */,
 			);
 			path = PlanetaryHoursCalendar;
+			sourceTree = "<group>";
+		};
+		B92815802183D699002177E0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B92815822183D699002177E0 /* EventKit.framework */,
+				B92815812183D699002177E0 /* EventKitUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -151,11 +177,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B92D3BAB2186F94E00D72791 /* FESSolarCalculator.m in Sources */,
 				B928157A2183AB5A002177E0 /* main.m in Sources */,
 				B92815692183AB59002177E0 /* RootViewController.m in Sources */,
 				B928156F2183AB59002177E0 /* ModelController.m in Sources */,
 				B928156C2183AB59002177E0 /* DataViewController.m in Sources */,
 				B92815662183AB59002177E0 /* AppDelegate.m in Sources */,
+				B92D3B9321868C2E00D72791 /* PlanetaryHourDataSource.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -232,7 +260,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -285,7 +313,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -300,6 +328,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N9987K9442;
 				INFOPLIST_FILE = PlanetaryHoursCalendar/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -317,6 +346,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N9987K9442;
 				INFOPLIST_FILE = PlanetaryHoursCalendar/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

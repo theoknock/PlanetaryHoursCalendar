@@ -9,8 +9,15 @@
 #import "RootViewController.h"
 #import "ModelController.h"
 #import "DataViewController.h"
+#import "PlanetaryHourDataSource.h"
 
 @interface RootViewController ()
+{
+    MKGeodesicPolyline *flightPathPolyline;
+    MKPointAnnotation *planeAnnotation;
+    NSUInteger planeAnnotationPosition;
+    CATextLayer *planetaryHourSymbolTextLayer;
+}
 
 @property (readonly, strong, nonatomic) ModelController *modelController;
 @end
@@ -23,6 +30,11 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     // Configure the page view controller and add it as a child view controller.
+    
+    [PlanetaryHourDataSource.sharedDataSource calendarPlanetaryHoursForDate:nil location:nil completionBlock:^{
+    
+    }];
+    
     self.pageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStylePageCurl navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal options:nil];
     self.pageViewController.delegate = self;
 
@@ -32,17 +44,151 @@
 
     self.pageViewController.dataSource = self.modelController;
 
-    [self addChildViewController:self.pageViewController];
-    [self.view addSubview:self.pageViewController.view];
-
-    // Set the page view controller's bounds using an inset rect so that self's view is visible around the edges of the pages.
-    CGRect pageViewRect = self.view.bounds;
-    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
-        pageViewRect = CGRectInset(pageViewRect, 40.0, 40.0);
-    }
-    self.pageViewController.view.frame = pageViewRect;
+    [self addChild:self.pageViewController withChildToRemove:nil];
 
     [self.pageViewController didMoveToParentViewController:self];
+    
+    // Planetary-hour polylines for map view
+    const double meters_per_degree = 40075017.0 / 360.0;
+    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
+    CLLocationCoordinate2D coordinates[24];
+    CLLocationCoordinate2D coordinate = PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate;
+//    coordinates[0] = coordinate;
+    for (NSUInteger hour = 0; hour < 23; hour++)
+    {
+        // latitude degrees are mot 0 to 360; they are -180 to 180
+        // when adding meters, add 180 to longitude; then subtract 180 from the new longitude
+        coordinates[hour] = [self translateCoord:coordinate MetersLat:0 MetersLong:meters_per_planetary_hour_longitude * hour];
+        
+        MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
+        planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(hour % 7), nil);
+        planetaryHourAnnotation.coordinate = coordinates[hour];
+        [self.mapView addAnnotation:planetaryHourAnnotation];
+        
+    }
+    
+    flightPathPolyline = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:24];
+    [self.mapView addOverlay:flightPathPolyline];
+    
+    [self updatePlanePosition];
+}
+
+-(CLLocationCoordinate2D)translateCoord:(CLLocationCoordinate2D)coord MetersLat:(double)metersLat MetersLong:(double)metersLong{
+    
+    CLLocationCoordinate2D tempCoord;
+    
+    MKCoordinateRegion tempRegion = MKCoordinateRegionMakeWithDistance(coord, metersLat, metersLong);
+    MKCoordinateSpan tempSpan = tempRegion.span;
+    
+    
+    tempCoord.latitude = coord.latitude + tempSpan.latitudeDelta;
+    tempCoord.longitude = coord.longitude + tempSpan.longitudeDelta;
+    if (tempCoord.longitude > 180.0) // To-do:  accommodate multiple 180 overages
+        tempCoord.longitude = -1.0 * (180.0 - (tempCoord.longitude - 180.0));
+    else
+        tempCoord.longitude = coord.longitude + tempSpan.longitudeDelta;
+    
+    NSLog(@"\ntempCoord.longitude = coord.longitude + tempSpan.longitudeDelta;\n%f\t=\t%f\t+\t%f",
+          tempCoord.longitude, coord.longitude, tempSpan.longitudeDelta);
+
+    return tempCoord;
+    
+}
+
+
+CLLocationCoordinate2D MKCoordinateOffsetFromCoordinate(CLLocationCoordinate2D coordinate, CLLocationDistance offsetLatMeters, CLLocationDistance offsetLongMeters) {
+    MKMapPoint offsetPoint = MKMapPointForCoordinate(coordinate);
+    
+    CLLocationDistance metersPerPoint = MKMetersPerMapPointAtLatitude(coordinate.latitude);
+    double latPoints = offsetLatMeters / metersPerPoint;
+    offsetPoint.y += latPoints;
+    double longPoints = offsetLongMeters / metersPerPoint;
+    offsetPoint.x += longPoints;
+    
+    CLLocationCoordinate2D offsetCoordinate = MKCoordinateForMapPoint(offsetPoint);
+    return offsetCoordinate;
+}
+
+- (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id<MKOverlay>)overlay
+{
+    if (![overlay isKindOfClass:[MKPolyline class]]) {
+        return nil;
+    }
+    
+    MKPolylineRenderer *renderer =
+    [[MKPolylineRenderer alloc] initWithPolyline:(MKPolyline *)overlay];
+    renderer.lineWidth = 1.0f;
+    renderer.strokeColor = [UIColor blueColor];
+    renderer.alpha = 0.5;
+    
+    
+    return renderer;
+}
+
+//- (MKAnnotationView *)mapView:(MKMapView *)mapView viewForAnnotation:(id<MKAnnotation>)annotation
+//{
+//    static NSString * PinIdentifier = @"Pin";
+//
+//    MKAnnotationView *annotationView = [mapView dequeueReusableAnnotationViewWithIdentifier:PinIdentifier];
+//    if (!annotationView) {
+//        annotationView = [[MKAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:PinIdentifier];
+//    }
+//
+////    annotationView.image = [UIImage imageNamed:@"plane"];
+////    planetaryHourSymbolTextLayer = [CATextLayer layer];
+////    planetaryHourSymbolTextLayer.frame = annotationView.layer.bounds;
+////    planetaryHourSymbolTextLayer.alignmentMode = kCAAlignmentCenter;
+////    planetaryHourSymbolTextLayer.string = @"Planetary Hour";
+////    [annotationView.layer addSublayer:planetaryHourSymbolTextLayer];
+//
+//    return annotationView;
+//}
+
+
+- (void)updatePlanePosition {
+    static NSUInteger const step = 5;
+    
+    if (planeAnnotationPosition + step >= flightPathPolyline.pointCount) {
+        return;
+    }
+    
+    planeAnnotationPosition += step;
+    MKMapPoint nextMapPoint = flightPathPolyline.points[planeAnnotationPosition];
+    
+    planeAnnotation.coordinate = MKCoordinateForMapPoint(nextMapPoint);
+    
+    [self performSelector:@selector(updatePlanePosition) withObject:nil afterDelay:0.03];
+}
+
+- (void)addChild:(UIViewController *)childToAdd withChildToRemove:(UIViewController *)childToRemove
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    if (childToRemove != nil)
+    {
+        if ([childToRemove isKindOfClass:[UIPageViewController class]]) {
+            [childToRemove.view removeFromSuperview];
+            [childToRemove removeFromParentViewController];
+        }
+    }
+    
+    if (childToAdd != nil)
+    {
+        [self addChildViewController:childToAdd];
+        [childToAdd didMoveToParentViewController:self];
+        
+        if ([childToAdd isKindOfClass:[UIPageViewController class]]) {
+            
+            CGRect pageViewRect = self.containerView.bounds;
+            if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+                pageViewRect = CGRectInset(pageViewRect, 40.0, 0.0);
+            }
+            childToAdd.view.frame = pageViewRect;
+            
+            [self.containerView addSubview:childToAdd.view];
+        }
+    }
+    
+    NSLog(@"Number of child view controllers: %lu", self.childViewControllers.count);
 }
 
 

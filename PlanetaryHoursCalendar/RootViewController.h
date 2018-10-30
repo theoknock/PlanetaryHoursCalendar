@@ -7,10 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
+@import MapKit;
 
-@interface RootViewController : UIViewController <UIPageViewControllerDelegate>
+@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate>
 
 @property (strong, nonatomic) UIPageViewController *pageViewController;
+@property (weak, nonatomic) IBOutlet UIView *containerView;
+@property (weak, nonatomic) IBOutlet MKMapView *mapView;
 
 @end
 

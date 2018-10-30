@@ -8,6 +8,7 @@
 
 #import "ModelController.h"
 #import "DataViewController.h"
+#import "PlanetaryHourDataSource.h"
 
 /*
  A controller object that manages a simple model -- a collection of month names.
@@ -21,30 +22,70 @@
 
 @interface ModelController ()
 
-@property (readonly, strong, nonatomic) NSArray *pageData;
+@property (readonly, strong, nonatomic) NSArray<EKEvent *> *events;
 @end
 
 @implementation ModelController
+
+EKCalendar * _Nullable (^planetaryHourCalendar)(EKEventStore *) = ^(EKEventStore *eventStore)
+{
+    printf("\n%s\n", __PRETTY_FUNCTION__);
+    
+    __block EKCalendar *calendar = NULL;
+    
+    EKEventStore *es = [[EKEventStore alloc] init];
+    NSArray <EKCalendar *> *calendars = [es calendarsForEntityType:EKEntityTypeEvent];
+    [calendars enumerateObjectsUsingBlock:^(EKCalendar * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj.title isEqualToString:@"Planetary Hour"]) {
+            NSLog(@"Planetary Hour calendar found.");
+            calendar = obj;
+            *stop = TRUE;
+        } else {
+            
+        }
+    }];
+    
+    return calendar;
+    
+//    if (calendar == nil)
+//    {
+//        calendar = [EKCalendar calendarForEntityType:EKEntityTypeEvent eventStore:eventStore];
+//        calendar.title = @"Planetary Hour";
+//        calendar.source = eventStore.sources[1];
+//    } else {
+//        calendar = [eventStore defaultCalendarForNewEvents];
+//    }
+//
+//    __autoreleasing NSError *error;
+//    if ([eventStore saveCalendar:calendar commit:YES error:&error])
+//    {
+//        return calendar;
+//    } else {
+//        NSLog(@"Error saving new calendar: %@\nUsing default calendar for new events...", error.localizedDescription);
+//        return [eventStore defaultCalendarForNewEvents];
+//    }
+};
+
 
 - (instancetype)init {
     self = [super init];
     if (self) {
         // Create the data model.
-        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-        _pageData = [[dateFormatter monthSymbols] copy];
+        _events = [PlanetaryHourDataSource.sharedDataSource planetaryHoursEventsForDate:nil location:nil];
+        
     }
     return self;
 }
 
 - (DataViewController *)viewControllerAtIndex:(NSUInteger)index storyboard:(UIStoryboard *)storyboard {
     // Return the data view controller for the given index.
-    if (([self.pageData count] == 0) || (index >= [self.pageData count])) {
+    if (([self.events count] == 0) || (index >= [self.events count])) {
         return nil;
     }
 
     // Create a new view controller and pass suitable data.
     DataViewController *dataViewController = [storyboard instantiateViewControllerWithIdentifier:@"DataViewController"];
-    dataViewController.dataObject = self.pageData[index];
+    dataViewController.dataObject = self.events[index];
     return dataViewController;
 }
 
@@ -52,7 +93,7 @@
 - (NSUInteger)indexOfViewController:(DataViewController *)viewController {
     // Return the index of the given data view controller.
     // For simplicity, this implementation uses a static array of model objects and the view controller stores the model object; you can therefore use the model object to identify the index.
-    return [self.pageData indexOfObject:viewController.dataObject];
+    return [self.events indexOfObject:viewController.dataObject];
 }
 
 
@@ -77,7 +118,7 @@
     }
     
     index++;
-    if (index == [self.pageData count]) {
+    if (index == [self.events count]) {
         return nil;
     }
     return [self viewControllerAtIndex:index storyboard:viewController.storyboard];

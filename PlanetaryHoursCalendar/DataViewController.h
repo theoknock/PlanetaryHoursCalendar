@@ -7,11 +7,14 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <EventKit/EventKit.h>
+#import <EventKitUI/EventKitUI.h>
 
-@interface DataViewController : UIViewController
+@interface DataViewController : UIViewController <EKEventViewDelegate>
 
 @property (strong, nonatomic) IBOutlet UILabel *dataLabel;
-@property (strong, nonatomic) id dataObject;
+@property (strong, nonatomic) EKEvent *dataObject;
+@property (weak, nonatomic) IBOutlet UIView *containerView;
 
 @end
 
