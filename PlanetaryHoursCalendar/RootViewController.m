@@ -49,13 +49,25 @@
     [self.pageViewController didMoveToParentViewController:self];
     
     // Planetary-hour polylines for map view
-    const double meters_per_degree = 40075017.0 / 360.0;
-    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
+    double a = 6371000.0f;
+    double b = 6356800.0f;
+    double a_sqr = pow(a, 2.0f);
+    double b_sqr = pow(b, 2.0f);
+    double geodetic_latitude = degreesToRadians(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.latitude);
+    double top_left = pow(a_sqr * cos(geodetic_latitude), 2.0f);
+    double top_right = pow(b_sqr * sin(geodetic_latitude), 2.0f);
+    double bottom_left = pow(a * cos(geodetic_latitude), 2.0f);
+    double bottom_right = pow(b * sin(geodetic_latitude), 2.0f);
+    double geocentric_radius = sqrt((top_left + top_right) / (bottom_left + bottom_right));
+    
+    double earth_circumference = (2.0f * M_PI) * cos(geodetic_latitude) * geocentric_radius;
+    const double meters_per_planetary_hour = earth_circumference / 24.0;
+//    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
     CLLocationCoordinate2D coordinates[24];
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
-    for (NSUInteger hour = 0; hour < 23; hour++)
+    for (NSUInteger hour = 0; hour < 24; hour++)
     {
-        coordinates[hour] = [self translateCoord:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate MetersLat:0 MetersLong:meters_per_planetary_hour_longitude * hour];
+        coordinates[hour] = [self translateCoord:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate MetersLat:0 MetersLong:meters_per_planetary_hour * hour];
         
         MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
         planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour), nil);
@@ -67,7 +79,7 @@
     flightPathPolyline = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:24];
     [self.mapView addOverlay:flightPathPolyline];
     
-    [self updatePlanePosition];
+//    [self updatePlanePosition];
 }
 
 double degreesToRadians(float degrees)
