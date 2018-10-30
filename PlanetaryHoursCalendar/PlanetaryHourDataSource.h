@@ -69,7 +69,7 @@ typedef void(^PlanetaryHourEventCompletionBlock)(EKEvent *planetaryHourEvent);
 typedef NSDictionary *(^PlanetaryHourEventBlock)(NSUInteger hour, NSDate * _Nullable date, CLLocation * _Nullable location, PlanetaryHourEventCompletionBlock planetaryHourEventCompletionBlock);
 
 typedef NSString *(^PlanetSymbol)(Planet planet);
-
+typedef Planet(^PlanetForDay)(NSDate *date);
 
 #define SECONDS_PER_DAY 86400.00f
 #define HOURS_PER_SOLAR_TRANSIT 12.0f
@@ -82,6 +82,8 @@ typedef NSString *(^PlanetSymbol)(Planet planet);
 @property (strong, nonatomic) CLLocationManager *locationManager;
 
 @property (strong, nonatomic) PlanetSymbol ps;
+@property (strong, nonatomic) PlanetForDay pd;
+@property (copy) Planet(^PlanetForDay)(NSDate *date);
 @property (copy) NSString *(^planetSymbol)(Planet planet);
 @property (strong, nonatomic) dispatch_queue_t planetaryHourDataRequestQueue;
 @property (class, strong, nonatomic, readonly) NSArray<NSString *> *planetaryHourDataKeys;

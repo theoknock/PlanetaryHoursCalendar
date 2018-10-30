@@ -48,7 +48,7 @@ static PlanetaryHourDataSource *sharedDataSource = NULL;
 
 NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
     printf("\n%s\n", __PRETTY_FUNCTION__);
-    
+    planet = planet % 7;
     switch (planet) {
         case Sun:
             return @"☉";
@@ -82,6 +82,7 @@ NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
     {
         printf("\n%s\n", __PRETTY_FUNCTION__);
         self.ps = planetSymbol;
+        self.pd = planetForDay;
 //        self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
         [[self locationManager] startMonitoringSignificantLocationChanges];
         [[self locationManager] requestLocation];

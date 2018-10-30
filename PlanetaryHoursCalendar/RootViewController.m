@@ -52,16 +52,13 @@
     const double meters_per_degree = 40075017.0 / 360.0;
     const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
     CLLocationCoordinate2D coordinates[24];
-    CLLocationCoordinate2D coordinate = PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate;
-//    coordinates[0] = coordinate;
+    Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     for (NSUInteger hour = 0; hour < 23; hour++)
     {
-        // latitude degrees are mot 0 to 360; they are -180 to 180
-        // when adding meters, add 180 to longitude; then subtract 180 from the new longitude
-        coordinates[hour] = [self translateCoord:coordinate MetersLat:0 MetersLong:meters_per_planetary_hour_longitude * hour];
+        coordinates[hour] = [self translateCoord:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate MetersLat:0 MetersLong:meters_per_planetary_hour_longitude * hour];
         
         MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-        planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(hour % 7), nil);
+        planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour), nil);
         planetaryHourAnnotation.coordinate = coordinates[hour];
         [self.mapView addAnnotation:planetaryHourAnnotation];
         
@@ -73,26 +70,26 @@
     [self updatePlanePosition];
 }
 
--(CLLocationCoordinate2D)translateCoord:(CLLocationCoordinate2D)coord MetersLat:(double)metersLat MetersLong:(double)metersLong{
+double degreesToRadians(float degrees)
+{
+    return degrees * (M_PI / 180.0f);
+}
+
+- (CLLocationCoordinate2D)translateCoord:(CLLocationCoordinate2D)coord MetersLat:(double)metersLat MetersLong:(double)metersLong{
     
     CLLocationCoordinate2D tempCoord;
-    
     MKCoordinateRegion tempRegion = MKCoordinateRegionMakeWithDistance(coord, metersLat, metersLong);
     MKCoordinateSpan tempSpan = tempRegion.span;
     
-    
     tempCoord.latitude = coord.latitude + tempSpan.latitudeDelta;
     tempCoord.longitude = coord.longitude + tempSpan.longitudeDelta;
-    if (tempCoord.longitude > 180.0) // To-do:  accommodate multiple 180 overages
+    
+    if (tempCoord.longitude > 180.0)
         tempCoord.longitude = -1.0 * (180.0 - (tempCoord.longitude - 180.0));
     else
         tempCoord.longitude = coord.longitude + tempSpan.longitudeDelta;
-    
-    NSLog(@"\ntempCoord.longitude = coord.longitude + tempSpan.longitudeDelta;\n%f\t=\t%f\t+\t%f",
-          tempCoord.longitude, coord.longitude, tempSpan.longitudeDelta);
 
     return tempCoord;
-    
 }
 
 
