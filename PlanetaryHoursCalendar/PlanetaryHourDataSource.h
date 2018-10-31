@@ -70,6 +70,7 @@ typedef NSDictionary *(^PlanetaryHourEventBlock)(NSUInteger hour, NSDate * _Null
 
 typedef NSString *(^PlanetSymbol)(Planet planet);
 typedef Planet(^PlanetForDay)(NSDate *date);
+typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
 
 #define SECONDS_PER_DAY 86400.00f
 #define HOURS_PER_SOLAR_TRANSIT 12.0f
@@ -83,8 +84,10 @@ typedef Planet(^PlanetForDay)(NSDate *date);
 
 @property (strong, nonatomic) PlanetSymbol ps;
 @property (strong, nonatomic) PlanetForDay pd;
+@property (strong, nonatomic) HourDurations hd;
 @property (copy) Planet(^PlanetForDay)(NSDate *date);
 @property (copy) NSString *(^planetSymbol)(Planet planet);
+@property (copy) NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval daySpan);
 @property (strong, nonatomic) dispatch_queue_t planetaryHourDataRequestQueue;
 @property (class, strong, nonatomic, readonly) NSArray<NSString *> *planetaryHourDataKeys;
 

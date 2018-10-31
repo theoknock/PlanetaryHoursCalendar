@@ -10,12 +10,12 @@
 #import "ModelController.h"
 #import "DataViewController.h"
 #import "PlanetaryHourDataSource.h"
+#import "FESSolarCalculator.h"
 
 @interface RootViewController ()
 {
-    MKGeodesicPolyline *flightPathPolyline;
-    MKPointAnnotation *planeAnnotation;
-    NSUInteger planeAnnotationPosition;
+    MKGeodesicPolyline *planetaryHoursPolyline;
+    NSUInteger planetaryHourAnnotationPosition;
     CATextLayer *planetaryHourSymbolTextLayer;
 }
 
@@ -61,13 +61,20 @@
     double geocentric_radius = sqrt((top_left + top_right) / (bottom_left + bottom_right));
     
     double earth_circumference = (2.0f * M_PI) * cos(geodetic_latitude) * geocentric_radius;
-    const double meters_per_planetary_hour = earth_circumference / 24.0;
+    // TO-DO: Adjust per duration of planetary hour
+    __block double meters_per_planetary_hour = earth_circumference / 24.0;
+    
+    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+    NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+    NSArray<NSNumber *>*hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
+    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:meters_per_planetary_hour * 0.5 /* (hourDurations[1].doubleValue / hourDurations[0].doubleValue)*/], [NSNumber numberWithDouble:meters_per_planetary_hour * 2.0 /*(hourDurations[0].doubleValue / hourDurations[1].doubleValue)*/]];
+    
 //    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
     CLLocationCoordinate2D coordinates[24];
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     for (NSUInteger hour = 0; hour < 24; hour++)
     {
-        coordinates[hour] = [self translateCoord:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate MetersLat:0 MetersLong:meters_per_planetary_hour * hour];
+        coordinates[hour] = [self translateCoord:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate MetersLat:0 MetersLong:meters_per_planetary_hour * hour];//(hour < 12) ? hour * hourDurationRatios[0].doubleValue : hour * hourDurationRatios[1].doubleValue];
         
         MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
         planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour), nil);
@@ -76,15 +83,55 @@
         
     }
     
-    flightPathPolyline = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:24];
-    [self.mapView addOverlay:flightPathPolyline];
+//    planetaryHoursPolyline = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:24];
+//    [self.mapView addOverlay:planetaryHoursPolyline];
     
-//    [self updatePlanePosition];
+    [self repositionPlanetaryHourAnnotationsUsingDistance:[NSNumber numberWithDouble:meters_per_planetary_hour]];
+}
+
+NSArray<NSNumber *>*hourDurationRatios()
+{
+    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+    NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+    NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
+    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:(hourDurations[1].doubleValue / hourDurations[0].doubleValue)],
+                                                [NSNumber numberWithDouble:(hourDurations[0].doubleValue / hourDurations[1].doubleValue)]];
+    
+    return hourDurationRatios;
 }
 
 double degreesToRadians(float degrees)
 {
     return degrees * (M_PI / 180.0f);
+}
+
+- (void)repositionPlanetaryHourAnnotationsUsingDistance:(NSNumber *)distance {
+    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+    NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+    NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
+    
+    CLLocationCoordinate2D coordinates[24];
+    NSUInteger index = 0;
+    Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
+    
+    [CATransaction begin];
+    [CATransaction setCompletionBlock:^{
+        [self mapView:self.mapView regionDidChangeAnimated:TRUE];
+        [self performSelector:@selector(repositionPlanetaryHourAnnotationsUsingDistance:) withObject:distance afterDelay:1.0];
+    }];
+    [self mapView:self.mapView regionWillChangeAnimated:TRUE];
+    for (MKPointAnnotation *obj in self.mapView.annotations)
+    {
+        
+//        double adj_step = (index < 12) ? step * hourDurationRatios()[1].doubleValue : step * hourDurationRatios()[1].doubleValue;
+        double adj_step = (index < 12) ? hourDurations[0].doubleValue / distance.doubleValue : hourDurations[1].doubleValue / distance.doubleValue;
+        CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake(obj.coordinate.latitude, obj.coordinate.longitude - adj_step);
+        coordinates[index] = coordinate;
+        [obj setCoordinate:coordinate];
+        [obj setTitle:PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + index)];
+        index++;
+    }
+    [CATransaction commit];
 }
 
 - (CLLocationCoordinate2D)translateCoord:(CLLocationCoordinate2D)coord MetersLat:(double)metersLat MetersLong:(double)metersLong{
@@ -116,6 +163,20 @@ CLLocationCoordinate2D MKCoordinateOffsetFromCoordinate(CLLocationCoordinate2D c
     
     CLLocationCoordinate2D offsetCoordinate = MKCoordinateForMapPoint(offsetPoint);
     return offsetCoordinate;
+}
+
+- (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated
+{
+    [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [[self.mapView viewForAnnotation:obj] setHidden:TRUE];
+    }];
+}
+
+- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
+{
+    [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [[self.mapView viewForAnnotation:obj] setHidden:FALSE];
+    }];
 }
 
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id<MKOverlay>)overlay
@@ -152,22 +213,6 @@ CLLocationCoordinate2D MKCoordinateOffsetFromCoordinate(CLLocationCoordinate2D c
 //
 //    return annotationView;
 //}
-
-
-- (void)updatePlanePosition {
-    static NSUInteger const step = 5;
-    
-    if (planeAnnotationPosition + step >= flightPathPolyline.pointCount) {
-        return;
-    }
-    
-    planeAnnotationPosition += step;
-    MKMapPoint nextMapPoint = flightPathPolyline.points[planeAnnotationPosition];
-    
-    planeAnnotation.coordinate = MKCoordinateForMapPoint(nextMapPoint);
-    
-    [self performSelector:@selector(updatePlanePosition) withObject:nil afterDelay:0.03];
-}
 
 - (void)addChild:(UIViewController *)childToAdd withChildToRemove:(UIViewController *)childToRemove
 {

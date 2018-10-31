@@ -223,7 +223,7 @@ double const toDegrees = 180 / M_PI;
     }
     if ((theseOps & FESSolarCalculationOfficial) == FESSolarCalculationOfficial) {
         computeSolarData(FESSolarCalculationOfficial, FESSolarCalculationZenithOfficial);
-    }
+    }   
     if ((theseOps & FESSolarCalculationCivil) == FESSolarCalculationCivil) {
         computeSolarData(FESSolarCalculationCivil, FESSolarCalculationZenithCivil);
     }

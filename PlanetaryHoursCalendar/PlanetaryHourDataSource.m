@@ -47,7 +47,7 @@ static PlanetaryHourDataSource *sharedDataSource = NULL;
 //}
 
 NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
-    printf("\n%s\n", __PRETTY_FUNCTION__);
+   //printf("\n%s\n", __PRETTY_FUNCTION__);
     planet = planet % 7;
     switch (planet) {
         case Sun:
@@ -83,6 +83,7 @@ NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
         printf("\n%s\n", __PRETTY_FUNCTION__);
         self.ps = planetSymbol;
         self.pd = planetForDay;
+        self.hd = hourDurations;
 //        self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
         [[self locationManager] startMonitoringSignificantLocationChanges];
         [[self locationManager] requestLocation];
@@ -322,7 +323,7 @@ void(^cachedSunriseSunsetData)(CLLocation * _Nullable, NSDate * _Nullable, Cache
 
 Planet(^planetForDay)(NSDate *) = ^(NSDate *date)
 {
-    printf("\n%s\n", __PRETTY_FUNCTION__);
+//    printf(."\n%s\n", __PRETTY_FUNCTION__);
     
     NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     long weekDay = (Day)[calendar component:NSCalendarUnitWeekday fromDate:date] - 1;
@@ -511,7 +512,7 @@ static NSDateFormatter *timeFormatter = NULL;
 
 NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval) = ^(NSTimeInterval daySpan)
 {
-    printf("\n%s\n", __PRETTY_FUNCTION__);
+//    printf("\n%s\n", __PRETTY_FUNCTION__);
     
     NSTimeInterval dayHourDuration = daySpan / HOURS_PER_SOLAR_TRANSIT;
     NSTimeInterval nightSpan = fabs(SECONDS_PER_DAY - daySpan);
