@@ -63,19 +63,17 @@
     double earth_circumference = (2.0f * M_PI) * cos(geodetic_latitude) * geocentric_radius;
     // TO-DO: Adjust per duration of planetary hour
     __block double meters_per_planetary_hour = earth_circumference / 24.0;
-    
-    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
-    NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
-    NSArray<NSNumber *>*hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
-    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:meters_per_planetary_hour * 0.5 /* (hourDurations[1].doubleValue / hourDurations[0].doubleValue)*/], [NSNumber numberWithDouble:meters_per_planetary_hour * 2.0 /*(hourDurations[0].doubleValue / hourDurations[1].doubleValue)*/]];
-    
+    double meters_per_planetary_hour_day = ((meters_per_planetary_hour * 12.0) * hourDurationRatios()[0].doubleValue) / 12.0;
+    double meters_per_planetary_hour_night = ((meters_per_planetary_hour * 12.0) * hourDurationRatios()[1].doubleValue) / 12.0;
+    //    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
 //    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
     CLLocationCoordinate2D coordinates[24];
+    CLLocationCoordinate2D coordinate = PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate;
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     for (NSUInteger hour = 0; hour < 24; hour++)
     {
-        coordinates[hour] = [self translateCoord:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate MetersLat:0 MetersLong:meters_per_planetary_hour * hour];//(hour < 12) ? hour * hourDurationRatios[0].doubleValue : hour * hourDurationRatios[1].doubleValue];
-        
+        coordinate = [self translateCoord:coordinate MetersLat:0 MetersLong:(hour < 12) ? meters_per_planetary_hour_day : meters_per_planetary_hour_night];//(hour < 12) ? hour * hourDurationRatios[0].doubleValue : hour * hourDurationRatios[1].doubleValue];
+        coordinates[hour] = coordinate;
         MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
         planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour), nil);
         planetaryHourAnnotation.coordinate = coordinates[hour];
@@ -86,7 +84,7 @@
 //    planetaryHoursPolyline = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:24];
 //    [self.mapView addOverlay:planetaryHoursPolyline];
     
-    [self repositionPlanetaryHourAnnotationsUsingDistance:[NSNumber numberWithDouble:meters_per_planetary_hour]];
+//    [self repositionPlanetaryHourAnnotationsUsingDistance:[NSNumber numberWithDouble:meters_per_planetary_hour]];
 }
 
 NSArray<NSNumber *>*hourDurationRatios()
@@ -94,8 +92,8 @@ NSArray<NSNumber *>*hourDurationRatios()
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
     NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
     NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
-    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:(hourDurations[1].doubleValue / hourDurations[0].doubleValue)],
-                                                [NSNumber numberWithDouble:(hourDurations[0].doubleValue / hourDurations[1].doubleValue)]];
+    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:(hourDurations[0].doubleValue / hourDurations[1].doubleValue)],
+                                                [NSNumber numberWithDouble:(hourDurations[1].doubleValue / hourDurations[0].doubleValue)]];
     
     return hourDurationRatios;
 }
