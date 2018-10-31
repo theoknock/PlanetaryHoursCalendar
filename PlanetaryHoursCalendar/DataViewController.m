@@ -26,7 +26,6 @@
     EKEventViewController *eventVC = [[EKEventViewController alloc] init];
         [eventVC setEvent:self.dataObject];
         [eventVC setDelegate:self];
-        [eventVC setAllowsCalendarPreview:TRUE];
         [self addChild:eventVC withChildToRemove:nil];
 }
 

@@ -554,7 +554,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     NSLog(@"%s", __PRETTY_FUNCTION__);
     location = (CLLocationCoordinate2DIsValid(location.coordinate)) ? locationManager.location : location;
     date     = (!date) ? [NSDate date] : date;
-    //cachedSunriseSunsetData(location,, date, ^(NSArray<NSDate *> * _Nonnull sunriseSunsetDates) {
+    //cachedSunriseSunsetData(location, date, ^(NSArray<NSDate *> * _Nonnull sunriseSunsetDates) {
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
     EKEventStore *eventStore = [[EKEventStore alloc] init];
     [eventStore requestAccessToEntityType:EKEntityTypeEvent completion:^(BOOL granted, NSError * _Nullable error) {
