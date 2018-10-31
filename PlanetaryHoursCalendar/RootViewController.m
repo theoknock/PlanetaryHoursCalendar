@@ -72,6 +72,8 @@
         planetaryHourAnnotation.coordinate = newCoordinates;
         [self.mapView addAnnotation:planetaryHourAnnotation];
     }
+    
+    [self repositionPlanetaryHourAnnotations];
 }
 
 - (void)repositionPlanetaryHourAnnotations
@@ -85,20 +87,18 @@
     double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
     double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
     double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
-    double step_per_day_hour_second = width_per_day_hour / 60.0;
-    double step_per_night_hour_second = width_per_night_hour / 60.0;
+    double step_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
+    double step_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     for (MKPointAnnotation *annotation in self.mapView.annotations)
     {
         MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(annotation.coordinate);
         NSUInteger index = [self.mapView.annotations indexOfObject:annotation];
-        coordinatesAtPoint = MKMapPointMake((index < 12) ? coordinatesAtPoint.x + step_per_day_hour_second : coordinatesAtPoint.x + step_per_night_hour_second, coordinatesAtPoint.y);
+        coordinatesAtPoint = MKMapPointMake((index < 12) ? coordinatesAtPoint.x - step_per_day_hour_second : coordinatesAtPoint.x - step_per_night_hour_second, coordinatesAtPoint.y);
         CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
-        MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-        planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + index);
-        planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"%lu", index];
-        planetaryHourAnnotation.coordinate = newCoordinates;
-        [self.mapView addAnnotation:planetaryHourAnnotation];
+        annotation.title = PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + index);
+        annotation.subtitle = [NSString stringWithFormat:@"%lu", index];
+        annotation.coordinate = newCoordinates;
     }
     
     [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
