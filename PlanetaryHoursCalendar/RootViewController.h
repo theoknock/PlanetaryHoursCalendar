@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-@import MapKit;
+#import <MapKit/MapKit.h>
 
 @interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate>
 

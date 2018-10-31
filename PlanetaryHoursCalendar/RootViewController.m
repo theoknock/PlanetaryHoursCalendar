@@ -62,9 +62,9 @@
     
     double earth_circumference = (2.0f * M_PI) * cos(geodetic_latitude) * geocentric_radius;
     // TO-DO: Adjust per duration of planetary hour
-    __block double meters_per_planetary_hour = earth_circumference / 24.0;
-    double meters_per_planetary_hour_day = ((meters_per_planetary_hour * 12.0) * hourDurationRatios()[0].doubleValue) / 12.0;
-    double meters_per_planetary_hour_night = ((meters_per_planetary_hour * 12.0) * hourDurationRatios()[1].doubleValue) / 12.0;
+//    __block double meters_per_planetary_hour = earth_circumference / 24.0;
+    double meters_per_planetary_hour_day = ((earth_circumference * 0.5) * hourDurationRatios()[0].doubleValue) / 12.0;
+    double meters_per_planetary_hour_night = ((earth_circumference * 0.5) * hourDurationRatios()[1].doubleValue) / 12.0;
     //    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
 //    const double meters_per_planetary_hour_longitude = (meters_per_degree * 24.0);
     CLLocationCoordinate2D coordinates[24];
@@ -72,10 +72,11 @@
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     for (NSUInteger hour = 0; hour < 24; hour++)
     {
-        coordinate = [self translateCoord:coordinate MetersLat:0 MetersLong:(hour < 12) ? meters_per_planetary_hour_day : meters_per_planetary_hour_night];//(hour < 12) ? hour * hourDurationRatios[0].doubleValue : hour * hourDurationRatios[1].doubleValue];
+        coordinate = [self translateCoord:coordinate MetersLat:0 MetersLong:(hour < 12) ? (hour == 0) ? 0 : meters_per_planetary_hour_day : meters_per_planetary_hour_night];//(hour < 12) ? hour * hourDurationRatios[0].doubleValue : hour * hourDurationRatios[1].doubleValue];
         coordinates[hour] = coordinate;
         MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-        planetaryHourAnnotation.title = NSLocalizedString(PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour), nil);
+        planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour);
+        planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"%lu", hour];
         planetaryHourAnnotation.coordinate = coordinates[hour];
         [self.mapView addAnnotation:planetaryHourAnnotation];
         
@@ -84,16 +85,19 @@
 //    planetaryHoursPolyline = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:24];
 //    [self.mapView addOverlay:planetaryHoursPolyline];
     
-//    [self repositionPlanetaryHourAnnotationsUsingDistance:[NSNumber numberWithDouble:meters_per_planetary_hour]];
+//    [self repositionPlanetaryHourAnnotationsUsingDistance:[NSNumber numberWithDouble:earth_circumference]];
 }
 
 NSArray<NSNumber *>*hourDurationRatios()
 {
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
     NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
-    NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
-    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:(hourDurations[0].doubleValue / hourDurations[1].doubleValue)],
-                                                [NSNumber numberWithDouble:(hourDurations[1].doubleValue / hourDurations[0].doubleValue)]];
+    NSTimeInterval nightSpan = 86400.0f - daySpan;
+//    NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
+//    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:(hourDurations[0].doubleValue / hourDurations[1].doubleValue)],
+//                                                [NSNumber numberWithDouble:(hourDurations[1].doubleValue / hourDurations[0].doubleValue)]];
+    NSArray<NSNumber *> *hourDurationRatios = @[[NSNumber numberWithDouble:daySpan / nightSpan],
+                                                [NSNumber numberWithDouble:nightSpan / daySpan]];
     
     return hourDurationRatios;
 }
@@ -103,33 +107,75 @@ double degreesToRadians(float degrees)
     return degrees * (M_PI / 180.0f);
 }
 
-- (void)repositionPlanetaryHourAnnotationsUsingDistance:(NSNumber *)distance {
+- (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated
+{
+//    [CATransaction begin];
+//    MKMapRect annotationsRect = MKMapRectMake(mapView.annotationVisibleRect.origin.x, mapView.annotationVisibleRect.origin.y, mapView.annotationVisibleRect.size.width, mapView.annotationVisibleRect.size.height);
+////    MKMapRect unionRect = MKMapRectUnion(annotationsRect, MKMapRectWorld);
+//    NSArray<MKPointAnnotation *> *annotations = [[mapView annotationsInMapRect:annotationsRect] copy];
+//    [mapView removeAnnotations:annotations];
+//    [CATransaction setCompletionBlock:^{
+//        [mapView addAnnotations:annotations];
+//    }];
+////    [[mapView annotationsInMapRect:unionRect] enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, BOOL * _Nonnull stop) {
+////        [[self.mapView viewForAnnotation:obj] setHidden:TRUE];
+////    }];
+//    [CATransaction commit];
+}
+
+- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
+{
+//    [CATransaction begin];
+//    MKMapRect annotationsRect = MKMapRectMake(mapView.annotationVisibleRect.origin.x, mapView.annotationVisibleRect.origin.y, mapView.annotationVisibleRect.size.width, mapView.annotationVisibleRect.size.height);
+//    [[mapView annotationsInMapRect:annotationsRect] enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, BOOL * _Nonnull stop) {
+//        [[self.mapView viewForAnnotation:obj] setHidden:FALSE];
+//    }];
+//    [CATransaction commit];
+}
+
+- (void)repositionPlanetaryHourAnnotationsUsingDistance:(NSNumber *)earth_circumference {
+    // distance / (86400.0 seconds per day / 24.0 distances)
+    
+//    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+//    NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+//    NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
+//
+    double meters_per_planetary_hour_day = ((earth_circumference.doubleValue * 0.5) * hourDurationRatios()[0].doubleValue) / 12.0;
+    double meters_per_planetary_hour_night = ((earth_circumference.doubleValue * 0.5) * hourDurationRatios()[1].doubleValue) / 12.0;
+    
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
     NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
     NSArray<NSNumber *> *hourDurations = PlanetaryHourDataSource.sharedDataSource.hd(daySpan);
-    
-    CLLocationCoordinate2D coordinates[24];
-    NSUInteger index = 0;
+    double steps_per_planetary_hour_day = meters_per_planetary_hour_day / hourDurations[0].doubleValue;
+    double steps_per_planetary_hour_night = meters_per_planetary_hour_night / hourDurations[1].doubleValue;// meters_per_planetary_hour_night / ((86400.0f * hourDurationRatios()[0].doubleValue) / (hourDurationRatios()[1].doubleValue * 12.0));
+    NSLog(@"steps per day\t%f\t\tsteps per night\t%f", steps_per_planetary_hour_day, steps_per_planetary_hour_night);
+//    CLLocationCoordinate2D coordinates[24];
+    __block NSUInteger index = 0;
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     
+    NSArray<MKPointAnnotation *> *annotations = [self.mapView annotations];//annotationsInMapRect:annotationsRect] copy];
+    
     [CATransaction begin];
+        [self.mapView removeAnnotations:[self.mapView annotations]];
     [CATransaction setCompletionBlock:^{
-        [self mapView:self.mapView regionDidChangeAnimated:TRUE];
-        [self performSelector:@selector(repositionPlanetaryHourAnnotationsUsingDistance:) withObject:distance afterDelay:1.0];
+        [CATransaction begin];
+            [CATransaction setCompletionBlock:^{
+                [self.mapView addAnnotations:annotations];
+            }];
+            for (MKPointAnnotation *obj in annotations)
+            {
+                // To-do: Calculate coordinates based on elapsed time since last update
+                //        (so that annotations can be repositioned when region changes)
+                double step = (index < 12) ? steps_per_planetary_hour_day : steps_per_planetary_hour_night;
+                CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake(obj.coordinate.latitude, obj.coordinate.longitude);
+                [obj setCoordinate:[self translateCoord:coordinate MetersLat:0 MetersLong:step]];
+                [obj setTitle:PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + index)];
+                index++;
+            }
+        [CATransaction commit];
     }];
-    [self mapView:self.mapView regionWillChangeAnimated:TRUE];
-    for (MKPointAnnotation *obj in self.mapView.annotations)
-    {
-        
-//        double adj_step = (index < 12) ? step * hourDurationRatios()[1].doubleValue : step * hourDurationRatios()[1].doubleValue;
-        double adj_step = (index < 12) ? hourDurations[0].doubleValue / distance.doubleValue : hourDurations[1].doubleValue / distance.doubleValue;
-        CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake(obj.coordinate.latitude, obj.coordinate.longitude - adj_step);
-        coordinates[index] = coordinate;
-        [obj setCoordinate:coordinate];
-        [obj setTitle:PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + index)];
-        index++;
-    }
     [CATransaction commit];
+    [self performSelector:@selector(repositionPlanetaryHourAnnotationsUsingDistance:) withObject:earth_circumference afterDelay:1.0];
 }
 
 - (CLLocationCoordinate2D)translateCoord:(CLLocationCoordinate2D)coord MetersLat:(double)metersLat MetersLong:(double)metersLong{
@@ -161,20 +207,6 @@ CLLocationCoordinate2D MKCoordinateOffsetFromCoordinate(CLLocationCoordinate2D c
     
     CLLocationCoordinate2D offsetCoordinate = MKCoordinateForMapPoint(offsetPoint);
     return offsetCoordinate;
-}
-
-- (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated
-{
-    [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [[self.mapView viewForAnnotation:obj] setHidden:TRUE];
-    }];
-}
-
-- (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
-{
-    [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [[self.mapView viewForAnnotation:obj] setHidden:FALSE];
-    }];
 }
 
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id<MKOverlay>)overlay

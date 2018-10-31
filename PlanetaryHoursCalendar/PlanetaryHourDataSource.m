@@ -337,14 +337,14 @@ NSString *(^planetSymbolForHour)(Planet, NSUInteger) = ^(Planet planetForDay, NS
 {
     printf("\n%s\n", __PRETTY_FUNCTION__);
     
-    return planetSymbol((planetForDay + hour) % 7);
+    return planetSymbol((planetForDay + hour) % NUMBER_OF_PLANETS);
 };
 
 NSString *(^planetNameForHour)(Planet, NSUInteger) = ^(Planet planetForDay, NSUInteger hour)
 {
     printf("\n%s\n", __PRETTY_FUNCTION__);
     
-    return planetName((planetForDay + hour) % 7);
+    return planetName((planetForDay + hour) % NUMBER_OF_PLANETS);
 };
 
 //NSDictionary *(^planetaryHourData)(NSArray<NSNumber *> *, NSUInteger, NSArray<NSDate *> *, CLLocationCoordinate2D) = ^(NSArray<NSNumber *> *hourDurations, NSUInteger hour, NSArray<NSDate *> *dates, CLLocationCoordinate2D coordinate)
@@ -527,10 +527,8 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     Meridian meridian                = (hour < HOURS_PER_SOLAR_TRANSIT) ? AM : PM;
     SolarTransit transit             = (hour < HOURS_PER_SOLAR_TRANSIT) ? Sunrise : Sunset;
     Planet planet                    = planetForDay(dates.firstObject);
-    hour = hour % 12;
-    NSUInteger planetStringIndex     = ((planet + hour) % NUMBER_OF_PLANETS);
-    NSString *symbol                 = planetSymbol(planetStringIndex);
-    NSString *name                   = planetName(planetStringIndex);
+    NSString *symbol                 = planetSymbolForHour(planet, hour);
+    NSString *name                   = planetNameForHour(planet, hour);
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
     NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:dates[transit]];
     NSTimeInterval endTimeInterval   = hourDurations[meridian].doubleValue * (hour + 1);
