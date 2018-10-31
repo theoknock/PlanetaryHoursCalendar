@@ -529,6 +529,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     Planet planet                    = planetForDay(dates.firstObject);
     NSString *symbol                 = planetSymbolForHour(planet, hour);
     NSString *name                   = planetNameForHour(planet, hour);
+    hour = hour % 12;
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
     NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:dates[transit]];
     NSTimeInterval endTimeInterval   = hourDurations[meridian].doubleValue * (hour + 1);
