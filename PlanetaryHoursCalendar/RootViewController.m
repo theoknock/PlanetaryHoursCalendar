@@ -44,6 +44,10 @@
             
             [self.pageViewController didMoveToParentViewController:self];
             
+            [self.mapView setRegion:MKCoordinateRegionMake(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate, MKCoordinateSpanMake(0.01, 0.01)) animated:TRUE];
+//            [self.mapView setPitchEnabled:TRUE];
+//            MKMapCamera *mapCamera = [MKMapCamera cameraLookingAtCenterCoordinate:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate fromDistance:(CLLocationDistance)500.0 pitch:45.0 heading:(CLLocationDirection)0.0];
+//            [self.mapView setCamera:mapCamera animated:TRUE];
             [self addPlanetaryHourAnnotations];
         });
     }];
@@ -97,6 +101,11 @@
         CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
         annotation.coordinate = newCoordinates;
         [[self.mapView viewForAnnotation:annotation] setHidden:FALSE];
+        [self.mapView.selectedAnnotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [self.mapView setRegion:MKCoordinateRegionMake(obj.coordinate, self.mapView.region.span) animated:TRUE];
+            *stop = TRUE;
+            return stop;
+        }];
     }
     
     [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
