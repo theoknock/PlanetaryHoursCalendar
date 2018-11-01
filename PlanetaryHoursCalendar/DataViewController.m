@@ -23,6 +23,12 @@
     [super viewWillAppear:animated];
     self.dataLabel.text = [self.dataObject description];
     EKEventViewController *eventVC = [[EKEventViewController alloc] init];
+    [eventVC.view setBackgroundColor:[UIColor clearColor]];
+    [eventVC.view setOpaque:FALSE];
+    [eventVC.view.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [obj setBackgroundColor:[UIColor clearColor]];
+        [obj setOpaque:FALSE];
+    }];
     [eventVC setEvent:self.dataObject];
     [eventVC setDelegate:self];
     [self addChild:eventVC withChildToRemove:nil];
