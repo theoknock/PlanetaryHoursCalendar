@@ -80,8 +80,8 @@ NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
 {
     if (self == [super init])
     {
-        printf("\n%s\n", __PRETTY_FUNCTION__);
-        self.ps = planetSymbol;
+//        printf("\n%s\n", __PRETTY_FUNCTION__);
+        self.planetSymbolForPlanet = planetSymbolForPlanetBlock;
         self.pd = planetForDay;
         self.hd = hourDurations;
 //        self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
@@ -123,7 +123,7 @@ static CLLocationManager *locationManager = NULL;
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
 {
-    NSLog(@"%s\t\t\nLocation services authorization status code:\t%d", __PRETTY_FUNCTION__, status);
+//    NSLog(@"%s\t\t\nLocation services authorization status code:\t%d", __PRETTY_FUNCTION__, status);
     if (status == kCLAuthorizationStatusDenied || status == kCLAuthorizationStatusRestricted)
     {
         NSLog(@"%s\nFailure to authorize location services", __PRETTY_FUNCTION__);
@@ -141,7 +141,7 @@ static CLLocationManager *locationManager = NULL;
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
 {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    NSLog(@"%s", __PRETTY_FUNCTION__);
     CLLocation *currentLocation = [locations lastObject];
     if ((self.lastLocation == nil) || (((self.lastLocation.coordinate.latitude != currentLocation.coordinate.latitude) || (self.lastLocation.coordinate.longitude != currentLocation.coordinate.longitude)) && ((currentLocation.coordinate.latitude != 0.0) || (currentLocation.coordinate.longitude != 0.0)))) {
         self.lastLocation = [[CLLocation alloc] initWithLatitude:currentLocation.coordinate.latitude longitude:currentLocation.coordinate.longitude];
@@ -161,7 +161,7 @@ static CLLocationManager *locationManager = NULL;
 
 
 NSString *(^planetName)(Planet) = ^(Planet planet) {
-    printf("\n%s\n", __PRETTY_FUNCTION__);
+//    printf("\n%s\n", __PRETTY_FUNCTION__);
     
     switch (planet) {
         case Sun:
@@ -333,11 +333,11 @@ Planet(^planetForDay)(NSDate *) = ^(NSDate *date)
     return planet;
 };
 
-NSString *(^planetSymbolForHour)(Planet, NSUInteger) = ^(Planet planetForDay, NSUInteger hour)
+NSString *(^planetSymbolForPlanetBlock)(Planet) = ^(Planet planetForDay)
 {
-    printf("\n%s\n", __PRETTY_FUNCTION__);
+//    printf("\n%s\n", __PRETTY_FUNCTION__);
     
-    return planetSymbol((planetForDay + hour) % NUMBER_OF_PLANETS);
+    return planetSymbol(planetForDay);
 };
 
 NSString *(^planetNameForHour)(Planet, NSUInteger) = ^(Planet planetForDay, NSUInteger hour)
@@ -470,7 +470,7 @@ NSString *(^planetNameForHour)(Planet, NSUInteger) = ^(Planet planetForDay, NSUI
 
 void(^calendarForEventStore)(EKEventStore *, CalendarForEventStoreCompletionBlock) = ^(EKEventStore *eventStore, CalendarForEventStoreCompletionBlock completionBlock)
 {
-    printf("\n%s\n", __PRETTY_FUNCTION__);
+//    printf("\n%s\n", __PRETTY_FUNCTION__);
     
     NSArray <EKCalendar *> *calendars = [eventStore calendarsForEntityType:EKEntityTypeEvent];
     [calendars enumerateObjectsUsingBlock:^(EKCalendar * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -527,8 +527,9 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     Meridian meridian                = (hour < HOURS_PER_SOLAR_TRANSIT) ? AM : PM;
     SolarTransit transit             = (hour < HOURS_PER_SOLAR_TRANSIT) ? Sunrise : Sunset;
     Planet planet                    = planetForDay(dates.firstObject);
-    NSString *symbol                 = planetSymbolForHour(planet, hour);
+    NSString *symbol                 = planetSymbolForPlanetBlock(planet + hour);
     NSString *name                   = planetNameForHour(planet, hour);
+    NSString *hour_ordinal            = [NSString stringWithFormat:@"(Hour %lu)", hour + 1];
     hour = hour % 12;
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
     NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:dates[transit]];
@@ -541,7 +542,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     event.availability = EKEventAvailabilityFree;
     event.alarms       = @[[EKAlarm alarmWithAbsoluteDate:startTime]];
     event.location     = [NSString stringWithFormat:@"%f, %f", location.coordinate.latitude, location.coordinate.longitude];
-    event.notes        = [NSString stringWithFormat:@"%@  %@", symbol, name];
+    event.notes        = [NSString stringWithFormat:@"%@", hour_ordinal];
     event.startDate    = startTime;
     event.endDate      = endTime;
     event.allDay       = NO;

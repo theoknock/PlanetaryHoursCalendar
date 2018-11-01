@@ -68,7 +68,7 @@ typedef void(^CalendarPlanetaryHours)(NSArray <NSDate *> *dates, CLLocation *loc
 typedef void(^PlanetaryHourEventCompletionBlock)(EKEvent *planetaryHourEvent);
 typedef NSDictionary *(^PlanetaryHourEventBlock)(NSUInteger hour, NSDate * _Nullable date, CLLocation * _Nullable location, PlanetaryHourEventCompletionBlock planetaryHourEventCompletionBlock);
 
-typedef NSString *(^PlanetSymbol)(Planet planet);
+typedef NSString *(^PlanetSymbolForPlanet)(Planet planet);
 typedef Planet(^PlanetForDay)(NSDate *date);
 typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
 
@@ -82,11 +82,11 @@ typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
 
 @property (strong, nonatomic) CLLocationManager *locationManager;
 
-@property (strong, nonatomic) PlanetSymbol ps;
+@property (strong, nonatomic) PlanetSymbolForPlanet planetSymbolForPlanet;
 @property (strong, nonatomic) PlanetForDay pd;
 @property (strong, nonatomic) HourDurations hd;
 @property (copy) Planet(^PlanetForDay)(NSDate *date);
-@property (copy) NSString *(^planetSymbol)(Planet planet);
+@property (copy) NSString *(^planetSymbolForPlanetBlock)(Planet planet);
 @property (copy) NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval daySpan);
 @property (strong, nonatomic) dispatch_queue_t planetaryHourDataRequestQueue;
 @property (class, strong, nonatomic, readonly) NSArray<NSString *> *planetaryHourDataKeys;

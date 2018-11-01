@@ -67,8 +67,8 @@
         coordinatesAtPoint = MKMapPointMake((hour == 0) ? coordinatesAtPoint.x : (hour < 12) ? coordinatesAtPoint.x + width_per_day_hour : coordinatesAtPoint.x + width_per_night_hour, coordinatesAtPoint.y);
         CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
         MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-        planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + hour);
-        planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"%lu", hour];
+        planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(planetForDay + hour);
+        planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"%lu", hour + 1];
         planetaryHourAnnotation.coordinate = newCoordinates;
         [self.mapView addAnnotation:planetaryHourAnnotation];
     }
@@ -89,16 +89,15 @@
     double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
     double step_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
     double step_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
-    Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
     for (MKPointAnnotation *annotation in self.mapView.annotations)
     {
+        [[self.mapView viewForAnnotation:annotation] setHidden:TRUE];
         MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(annotation.coordinate);
         NSUInteger index = [self.mapView.annotations indexOfObject:annotation];
         coordinatesAtPoint = MKMapPointMake((index < 12) ? coordinatesAtPoint.x - step_per_day_hour_second : coordinatesAtPoint.x - step_per_night_hour_second, coordinatesAtPoint.y);
         CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
-        annotation.title = PlanetaryHourDataSource.sharedDataSource.ps(planetForDay + index);
-        annotation.subtitle = [NSString stringWithFormat:@"%lu", index];
         annotation.coordinate = newCoordinates;
+        [[self.mapView viewForAnnotation:annotation] setHidden:FALSE];
     }
     
     [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];

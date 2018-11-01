@@ -24,7 +24,7 @@
                                     <segue destination="8aF-el-S66" kind="embed" id="ING-UD-zKa"/>
                                 </connections>
                             </containerView>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="I3h-X9-ebG">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="satellite" showsUserLocation="YES" showsScale="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I3h-X9-ebG">
                                 <rect key="frame" x="0.0" y="333.5" width="375" height="333.5"/>
                                 <connections>
                                     <outlet property="delegate" destination="703-4V-yAM" id="ZAC-x3-SGL"/>
