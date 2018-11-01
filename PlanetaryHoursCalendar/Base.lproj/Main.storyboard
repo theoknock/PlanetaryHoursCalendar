@@ -18,7 +18,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cwB-Nb-HZ0">
-                                <rect key="frame" x="0.0" y="20" width="375" height="333.5"/>
+                                <rect key="frame" x="0.0" y="20" width="375" height="667"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <connections>
                                     <segue destination="8aF-el-S66" kind="embed" id="ING-UD-zKa"/>
@@ -36,7 +36,7 @@
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="04K-aN-Qnh"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="18B-Nc-DJC"/>
                             <constraint firstItem="iAZ-4m-2z3" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="9Gh-iD-Zca"/>
-                            <constraint firstItem="cwB-Nb-HZ0" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.5" id="G5C-4b-cB9"/>
+                            <constraint firstItem="cwB-Nb-HZ0" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" id="G5C-4b-cB9"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="asH-UJ-ubr"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.5" id="oLD-iS-8RD"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="top" secondItem="iAZ-4m-2z3" secondAttribute="top" id="uGO-fz-owy"/>
@@ -61,12 +61,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <view clipsSubviews="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="s1b-V9-EN7">
-                                <rect key="frame" x="20" y="45" width="335" height="608"/>
-                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </view>
                             <containerView opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="YXz-EZ-vwG">
-                                <rect key="frame" x="0.0" y="43.5" width="375" height="600"/>
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                                 <connections>
                                     <segue destination="8EQ-gr-2bx" kind="embed" id="dm6-jz-ELG"/>
                                 </connections>
@@ -74,13 +70,11 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstAttribute="trailing" secondItem="s1b-V9-EN7" secondAttribute="trailing" constant="20" symbolic="YES" id="333-Jl-G0r"/>
-                            <constraint firstItem="s1b-V9-EN7" firstAttribute="leading" secondItem="ZwX-cT-FIQ" secondAttribute="leading" constant="20" symbolic="YES" id="CIC-qa-9gW"/>
-                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="height" secondItem="ZwX-cT-FIQ" secondAttribute="height" multiplier="0.9" id="Cpm-gq-fhn"/>
-                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="centerX" secondItem="K9I-jD-KjA" secondAttribute="centerX" id="NhK-7q-dwK"/>
+                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="height" secondItem="ZwX-cT-FIQ" secondAttribute="height" id="Cpm-gq-fhn"/>
                             <constraint firstItem="YXz-EZ-vwG" firstAttribute="width" secondItem="ZwX-cT-FIQ" secondAttribute="width" id="S7F-cE-atm"/>
-                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="centerY" secondItem="K9I-jD-KjA" secondAttribute="centerY" id="aIo-fz-ovc"/>
-                            <constraint firstAttribute="bottomMargin" secondItem="s1b-V9-EN7" secondAttribute="bottom" constant="14" id="rGH-Fr-IeC"/>
+                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="top" secondItem="ZwX-cT-FIQ" secondAttribute="top" id="XOp-Xk-sw9"/>
+                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="trailing" secondItem="K9I-jD-KjA" secondAttribute="trailing" id="i8p-HL-0bZ"/>
+                            <constraint firstItem="YXz-EZ-vwG" firstAttribute="leading" secondItem="K9I-jD-KjA" secondAttribute="leading" id="vTG-j7-FKr"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="K9I-jD-KjA"/>
                     </view>
@@ -90,14 +84,14 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="GmD-Rr-ZGN" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="597" y="-243"/>
+            <point key="canvasLocation" x="633" y="-243"/>
         </scene>
-        <!--View Controller-->
+        <!--EKEventViewController-->
         <scene sceneID="Oi8-LA-KST">
             <objects>
-                <viewController id="8EQ-gr-2bx" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="gk0-nO-0K2">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="600"/>
+                <viewController title="EKEventViewController" id="8EQ-gr-2bx" sceneMemberID="viewController">
+                    <view key="view" clipsSubviews="YES" contentMode="scaleToFill" id="gk0-nO-0K2">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <viewLayoutGuide key="safeArea" id="gH5-om-BH1"/>
@@ -105,14 +99,14 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XHY-m3-uCf" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1372" y="67"/>
+            <point key="canvasLocation" x="1394" y="-244"/>
         </scene>
-        <!--View Controller-->
+        <!--UIPageViewController-->
         <scene sceneID="J1L-WS-kNb">
             <objects>
-                <viewController id="8aF-el-S66" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="2ey-av-u9x">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="333.5"/>
+                <viewController title="UIPageViewController" id="8aF-el-S66" sceneMemberID="viewController">
+                    <view key="view" clipsSubviews="YES" contentMode="scaleToFill" id="2ey-av-u9x">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <viewLayoutGuide key="safeArea" id="Fx4-lR-rPa"/>
@@ -120,7 +114,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aMc-Yc-Ycc" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-794" y="-380"/>
+            <point key="canvasLocation" x="-102" y="-817"/>
         </scene>
     </scenes>
 </document>

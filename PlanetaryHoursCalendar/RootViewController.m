@@ -31,7 +31,7 @@
     
     [PlanetaryHourDataSource.sharedDataSource calendarPlanetaryHoursForDate:nil location:nil completionBlock:^{
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.pageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStylePageCurl navigationOrientation:UIPageViewControllerNavigationOrientationHorizontal options:nil];
+            self.pageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationVertical options:nil];
             self.pageViewController.delegate = self;
             
             DataViewController *startingViewController = [self.modelController viewControllerAtIndex:0 storyboard:self.storyboard];
