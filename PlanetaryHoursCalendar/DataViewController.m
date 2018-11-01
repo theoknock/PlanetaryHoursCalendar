@@ -25,13 +25,30 @@
     EKEventViewController *eventVC = [[EKEventViewController alloc] init];
     [eventVC.view setBackgroundColor:[UIColor clearColor]];
     [eventVC.view setOpaque:FALSE];
-    [eventVC.view.subviews enumerateObjectsUsingBlock:^(__kindof UIView * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        [obj setBackgroundColor:[UIColor clearColor]];
-        [obj setOpaque:FALSE];
-    }];
     [eventVC setEvent:self.dataObject];
     [eventVC setDelegate:self];
     [self addChild:eventVC withChildToRemove:nil];
+    [self enumerateSubviews:self.view];
+}
+
+- (void)enumerateSubviews:(typeof(UIView *))view {
+    
+    // Get the subviews of the view
+    NSArray *subviews = [view subviews];
+    
+    // Return if there are no subviews
+//    if ([subviews count] == 0) return; // COUNT CHECK LINE
+    
+    for (typeof(UIView *)subview in subviews) {
+        [subview setBackgroundColor:[UIColor clearColor]];
+        [subview setOpaque:FALSE];
+        [subview setAlpha:0.9];
+        // Do what you want to do with the subview
+        NSLog(@"%@", subview);
+        
+        // List the subviews of subview
+        [self enumerateSubviews:subview];
+    }
 }
 
 - (void)eventEditViewController:(EKEventEditViewController *)controller
