@@ -85,6 +85,7 @@ NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
         self.pd = planetForDay;
         self.hd = hourDurations;
 //        self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
+        self.planetaryHourDataRequestQueue = dispatch_queue_create("Planetary Hour Data Request Queue", DISPATCH_QUEUE_SERIAL);
         [[self locationManager] startMonitoringSignificantLocationChanges];
         [[self locationManager] requestLocation];
     }
@@ -612,6 +613,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
     NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:24];
     for (NSInteger hour = 0; hour < 24; hour++) {
+        
         EKEventStore *eventStore = [[EKEventStore alloc] init];
         EKEvent *event     = planetaryHourEvent(hour, eventStore, nil, hourDurations(daySpan), @[solarCalculator.sunrise, solarCalculator.sunset], location);
         

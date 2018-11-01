@@ -60,20 +60,24 @@
     double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
     double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
     double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
-    MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
+    __block MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
-    for (NSUInteger hour = 0; hour < 24; hour++)
-    {
-        coordinatesAtPoint = MKMapPointMake((hour == 0) ? coordinatesAtPoint.x : (hour < 12) ? coordinatesAtPoint.x + width_per_day_hour : coordinatesAtPoint.x + width_per_night_hour, coordinatesAtPoint.y);
-        CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
-        MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-        planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(planetForDay + hour);
-        planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"%lu", hour + 1];
-        planetaryHourAnnotation.coordinate = newCoordinates;
-        [self.mapView addAnnotation:planetaryHourAnnotation];
-    }
+    __block NSMutableArray *annotations = [NSMutableArray arrayWithCapacity:self.modelController.events.count];
+    [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull obj, NSUInteger hour, BOOL * _Nonnull stop) {
+            coordinatesAtPoint = MKMapPointMake((hour == 0) ? coordinatesAtPoint.x : (hour < 12) ? coordinatesAtPoint.x + width_per_day_hour : coordinatesAtPoint.x + width_per_night_hour, coordinatesAtPoint.y);
+            CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
+            MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
+            planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(planetForDay + hour);
+            planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"Hour %lu", hour + 1];
+            planetaryHourAnnotation.coordinate = newCoordinates;
+        [annotations addObject:planetaryHourAnnotation];
+        NSLog(@"%@", [NSString stringWithFormat:@"Hour %lu\t%lu", hour, [annotations indexOfObject:planetaryHourAnnotation]]);
+        
+    }];
+    [self.mapView addAnnotations:annotations];
     
-    [self repositionPlanetaryHourAnnotations];
+    
+//    [self repositionPlanetaryHourAnnotations];
 }
 
 - (void)repositionPlanetaryHourAnnotations
@@ -102,6 +106,8 @@
     
     [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
 }
+
+// MKMapViewDefaultAnnotationViewReuseIdentifier
 
 //- (void)repositionPlanetaryHourAnnotationsUsingDistance:(NSNumber *)earth_circumference {
 //    // distance / (86400.0 seconds per day / 24.0 distances)
@@ -236,5 +242,18 @@
     return UIPageViewControllerSpineLocationMid;
 }
 
+- (void)pageViewController:(UIPageViewController *)pageViewController willTransitionToViewControllers:(NSArray<DataViewController *> *)pendingViewControllers
+{
+    [pendingViewControllers enumerateObjectsUsingBlock:^(DataViewController * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSUInteger index = [self.modelController indexOfViewController:obj];
+       NSUInteger annotationIndex = [self.mapView.annotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            return [obj.subtitle isEqualToString:[NSString stringWithFormat:@"Hour %lu", index + 1]];
+        }];
+        MKPointAnnotation *annotation = self.mapView.annotations[annotationIndex];
+        NSLog(@"\t-------- INDEX %lu %@", index, self.mapView.annotations[annotationIndex].subtitle);
+        [self.mapView setCenterCoordinate:annotation.coordinate animated:TRUE];
+        [self.mapView setSelectedAnnotations:@[annotation]];
+    }];
+}
 
 @end

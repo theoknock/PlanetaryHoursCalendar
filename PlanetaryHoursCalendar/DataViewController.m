@@ -19,14 +19,13 @@
     // Do any additional setup after loading the view, typically from a nib.
 }
 
-
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     self.dataLabel.text = [self.dataObject description];
     EKEventViewController *eventVC = [[EKEventViewController alloc] init];
-        [eventVC setEvent:self.dataObject];
-        [eventVC setDelegate:self];
-        [self addChild:eventVC withChildToRemove:nil];
+    [eventVC setEvent:self.dataObject];
+    [eventVC setDelegate:self];
+    [self addChild:eventVC withChildToRemove:nil];
 }
 
 - (void)eventEditViewController:(EKEventEditViewController *)controller

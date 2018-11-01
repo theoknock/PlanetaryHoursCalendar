@@ -22,7 +22,6 @@
 
 @interface ModelController ()
 
-@property (readonly, strong, nonatomic) NSArray<EKEvent *> *events;
 @end
 
 @implementation ModelController
@@ -123,5 +122,10 @@ EKCalendar * _Nullable (^planetaryHourCalendar)(EKEventStore *) = ^(EKEventStore
     }
     return [self viewControllerAtIndex:index storyboard:viewController.storyboard];
 }
+
+//- (NSInteger)presentationIndexForPageViewController:(UIPageViewController *)pageViewController
+//{
+//    
+//}
 
 @end

@@ -7,10 +7,13 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <EventKit/EventKit.h>
 
 @class DataViewController;
 
 @interface ModelController : NSObject <UIPageViewControllerDataSource>
+
+@property (readonly, strong, nonatomic) NSArray<EKEvent *> *events;
 
 - (DataViewController *)viewControllerAtIndex:(NSUInteger)index storyboard:(UIStoryboard *)storyboard;
 - (NSUInteger)indexOfViewController:(DataViewController *)viewController;
