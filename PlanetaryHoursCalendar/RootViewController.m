@@ -62,7 +62,6 @@
     double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
     __block MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
     Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
-    __block NSMutableArray *annotations = [NSMutableArray arrayWithCapacity:self.modelController.events.count];
     [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull obj, NSUInteger hour, BOOL * _Nonnull stop) {
             coordinatesAtPoint = MKMapPointMake((hour == 0) ? coordinatesAtPoint.x : (hour < 12) ? coordinatesAtPoint.x + width_per_day_hour : coordinatesAtPoint.x + width_per_night_hour, coordinatesAtPoint.y);
             CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
@@ -70,14 +69,10 @@
             planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(planetForDay + hour);
             planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"Hour %lu", hour + 1];
             planetaryHourAnnotation.coordinate = newCoordinates;
-        [annotations addObject:planetaryHourAnnotation];
-        NSLog(@"%@", [NSString stringWithFormat:@"Hour %lu\t%lu", hour, [annotations indexOfObject:planetaryHourAnnotation]]);
-        
+        [self.mapView addAnnotation:planetaryHourAnnotation];
     }];
-    [self.mapView addAnnotations:annotations];
     
-    
-//    [self repositionPlanetaryHourAnnotations];
+    [self repositionPlanetaryHourAnnotations];
 }
 
 - (void)repositionPlanetaryHourAnnotations
