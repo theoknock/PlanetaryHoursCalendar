@@ -45,70 +45,151 @@
             [self.pageViewController didMoveToParentViewController:self];
             
             [self.mapView setRegion:MKCoordinateRegionMake(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate, MKCoordinateSpanMake(0.01, 0.01)) animated:TRUE];
+            
 //            [self.mapView setPitchEnabled:TRUE];
 //            MKMapCamera *mapCamera = [MKMapCamera cameraLookingAtCenterCoordinate:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate fromDistance:(CLLocationDistance)500.0 pitch:45.0 heading:(CLLocationDirection)0.0];
 //            [self.mapView setCamera:mapCamera animated:TRUE];
-            [self addPlanetaryHourAnnotations];
+//            [self addPlanetaryHourAnnotations];
+            [self positionPlanetaryHourAnnotations];
         });
     }];
 }
 
-- (void)addPlanetaryHourAnnotations
+- (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id <MKOverlay>)overlay
 {
-    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
-    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
-    NSTimeInterval nightSpan = 86400.0f - daySpan;
-    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
-    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
-    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
-    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
-    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
-    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
-    __block MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
-    Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
-    [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull obj, NSUInteger hour, BOOL * _Nonnull stop) {
-            coordinatesAtPoint = MKMapPointMake((hour == 0) ? coordinatesAtPoint.x : (hour < 12) ? coordinatesAtPoint.x + width_per_day_hour : coordinatesAtPoint.x + width_per_night_hour, coordinatesAtPoint.y);
-            CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
-            MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-            planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(planetForDay + hour);
-            planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"Hour %lu", hour + 1];
-            planetaryHourAnnotation.coordinate = newCoordinates;
-        [self.mapView addAnnotation:planetaryHourAnnotation];
-    }];
+    if (![overlay isKindOfClass:[MKGeodesicPolyline class]]) {
+        return nil;
+    }
     
-    [self repositionPlanetaryHourAnnotations];
-}
+    MKPolylineRenderer *renderer = [[MKPolylineRenderer alloc] initWithPolyline:(MKPolyline *)overlay];
+    renderer.lineWidth = 3.0f;
+    renderer.strokeColor = [UIColor blueColor];
+    renderer.alpha = 0.5;
+    
+    return renderer;
+} 
 
-- (void)repositionPlanetaryHourAnnotations
+//- (void)addPlanetaryHourAnnotations
+//{
+//    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+//    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+//    NSTimeInterval nightSpan = 86400.0f - daySpan;
+//    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
+//    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
+//    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
+//    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
+//    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
+//    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
+//    __block MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
+//    Planet planetForDay = PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]);
+//    [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull obj, NSUInteger hour, BOOL * _Nonnull stop) {
+//        coordinatesAtPoint = MKMapPointMake((hour == 0) ? coordinatesAtPoint.x : (hour < 12) ? coordinatesAtPoint.x + width_per_day_hour : coordinatesAtPoint.x + width_per_night_hour, coordinatesAtPoint.y);
+//        CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
+//        MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
+//        planetaryHourAnnotation.title = PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(planetForDay + hour);
+//        planetaryHourAnnotation.subtitle = [NSString stringWithFormat:@"Hour %lu", hour + 1];
+//        planetaryHourAnnotation.coordinate = newCoordinates;
+//        [self.mapView addAnnotation:planetaryHourAnnotation];
+//    }];
+//
+//    [self repositionPlanetaryHourAnnotations];
+//}
+//
+//- (void)repositionPlanetaryHourAnnotations
+//{
+//    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+//    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+//    NSTimeInterval nightSpan = 86400.0f - daySpan;
+//    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
+//    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
+//    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
+//    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
+//    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
+//    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
+//    double step_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
+//    double step_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
+//    for (MKPointAnnotation *annotation in self.mapView.annotations)
+//    {
+//        [[self.mapView viewForAnnotation:annotation] setHidden:TRUE];
+//        MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(annotation.coordinate);
+//        NSUInteger index = [self.mapView.annotations indexOfObject:annotation];
+//        coordinatesAtPoint = MKMapPointMake((index < 12) ? coordinatesAtPoint.x - step_per_day_hour_second : coordinatesAtPoint.x - step_per_night_hour_second, coordinatesAtPoint.y);
+//        CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
+//        annotation.coordinate = newCoordinates;
+//        [[self.mapView viewForAnnotation:annotation] setHidden:FALSE];
+//        [self.mapView.selectedAnnotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//            [self.mapView setRegion:MKCoordinateRegionMake(obj.coordinate, self.mapView.region.span) animated:TRUE];
+//            *stop = TRUE;
+//            return stop;
+//        }];
+//    }
+//
+//    [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
+//}
+
+void(^addPlanetaryHourAnnotation)(NSString *, NSString *, CLLocationCoordinate2D, CLLocationCoordinate2D, CLLocationCoordinate2D, MKMapView *) = ^(NSString *title, NSString *subtitle, CLLocationCoordinate2D coordinate, CLLocationCoordinate2D start_coordinate, CLLocationCoordinate2D end_coordinate, MKMapView *mapView)
 {
-    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
-    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
-    NSTimeInterval nightSpan = 86400.0f - daySpan;
-    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
-    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
-    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
-    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
-    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
-    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
-    double step_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
-    double step_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
-    for (MKPointAnnotation *annotation in self.mapView.annotations)
-    {
-        [[self.mapView viewForAnnotation:annotation] setHidden:TRUE];
-        MKMapPoint coordinatesAtPoint = MKMapPointForCoordinate(annotation.coordinate);
-        NSUInteger index = [self.mapView.annotations indexOfObject:annotation];
-        coordinatesAtPoint = MKMapPointMake((index < 12) ? coordinatesAtPoint.x - step_per_day_hour_second : coordinatesAtPoint.x - step_per_night_hour_second, coordinatesAtPoint.y);
-        CLLocationCoordinate2D newCoordinates = MKCoordinateForMapPoint(coordinatesAtPoint);
-        annotation.coordinate = newCoordinates;
-        [[self.mapView viewForAnnotation:annotation] setHidden:FALSE];
-        [self.mapView.selectedAnnotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            [self.mapView setRegion:MKCoordinateRegionMake(obj.coordinate, self.mapView.region.span) animated:TRUE];
+    MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
+    planetaryHourAnnotation.title = title;
+    planetaryHourAnnotation.subtitle = subtitle;
+    planetaryHourAnnotation.coordinate = coordinate;
+    [mapView addAnnotation:planetaryHourAnnotation];
+    
+    CLLocationCoordinate2D coordinates[2] = {start_coordinate, end_coordinate};
+    MKGeodesicPolyline *planetaryHourTravelLine = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:2];
+    [mapView addOverlay:planetaryHourTravelLine];
+    
+};
+
+void(^positionPlanetaryHourAnnotation)(NSUInteger , CLLocationCoordinate2D, MKMapView *) = ^(NSUInteger index, CLLocationCoordinate2D coordinate, MKMapView *mapView)
+{
+    [UIView animateWithDuration:1.0 animations:^{
+        [[mapView viewForAnnotation:mapView.annotations[index]] setHidden:TRUE];
+        mapView.annotations[index].coordinate = coordinate;
+        [[mapView viewForAnnotation:mapView.annotations[index]] setHidden:FALSE];
+    } completion:^(BOOL finished) {
+        [mapView.selectedAnnotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            [mapView setRegion:MKCoordinateRegionMake(obj.coordinate, mapView.region.span) animated:TRUE];
             *stop = TRUE;
             return stop;
         }];
-    }
+    }];
+};
+
+- (void)positionPlanetaryHourAnnotations
+{
+    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+    NSTimeInterval nightSpan = 86400.0f - daySpan;
+    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
+    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
+    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
+    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
+    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
+    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
+    double steps_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
+    double steps_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
+    __block MKMapPoint start_point = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
+    [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull obj, NSUInteger hour, BOOL * _Nonnull stop) {
+        MKMapPoint end_point = MKMapPointMake((hour == 0) ? start_point.x : (hour < 12) ? start_point.x + width_per_day_hour : start_point.x + width_per_night_hour, start_point.y);
+        NSTimeInterval elapsedTime = [[NSDate date] timeIntervalSinceDate:solarCalculator.sunrise];
+        double day_steps   = steps_per_day_hour_second   * elapsedTime;
+        double night_steps = steps_per_night_hour_second * elapsedTime;
+        MKMapPoint currentPoint = MKMapPointMake((hour < 12) ? end_point.x - day_steps : end_point.x - night_steps, end_point.y);
+        CLLocationCoordinate2D planetaryHourCoordinate = MKCoordinateForMapPoint(currentPoint);
+        __weak typeof(MKMapView *) w_mapView = self.mapView;
+        @try {
+            if (nil != self.mapView.annotations[hour])
+                positionPlanetaryHourAnnotation(hour, planetaryHourCoordinate, w_mapView);
+        } @catch (NSException *exception) {
+            addPlanetaryHourAnnotation(PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]) + hour), [NSString stringWithFormat:@"Hour %lu", hour + 1], planetaryHourCoordinate, MKCoordinateForMapPoint(start_point), MKCoordinateForMapPoint(end_point), w_mapView);
+        } @finally {
+            start_point = end_point;
+        }
+        
+    }];
     
-    [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
+    [self performSelector:@selector(positionPlanetaryHourAnnotations) withObject:0 afterDelay:1.0];
 }
 
 // MKMapViewDefaultAnnotationViewReuseIdentifier
@@ -158,19 +239,19 @@
 //    [self performSelector:@selector(repositionPlanetaryHourAnnotationsUsingDistance:) withObject:earth_circumference afterDelay:1.0];
 //}
 
-- (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id<MKOverlay>)overlay
-{
-    if (![overlay isKindOfClass:[MKPolyline class]]) {
-        return nil;
-    }
-    
-    MKPolylineRenderer *renderer = [[MKPolylineRenderer alloc] initWithPolyline:(MKPolyline *)overlay];
-    renderer.lineWidth = 1.0f;
-    renderer.strokeColor = [UIColor blueColor];
-    renderer.alpha = 0.5;
-    
-    return renderer;
-}
+//- (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id<MKOverlay>)overlay
+//{
+//    if (![overlay isKindOfClass:[MKPolyline class]]) {
+//        return nil;
+//    }
+//
+//    MKPolylineRenderer *renderer = [[MKPolylineRenderer alloc] initWithPolyline:(MKPolyline *)overlay];
+//    renderer.lineWidth = 1.0f;
+//    renderer.strokeColor = [UIColor blueColor];
+//    renderer.alpha = 0.5;
+//
+//    return renderer;
+//}
 
 - (void)addChild:(UIViewController *)childToAdd withChildToRemove:(UIViewController *)childToRemove
 {
@@ -248,15 +329,18 @@
 
 - (void)pageViewController:(UIPageViewController *)pageViewController willTransitionToViewControllers:(NSArray<DataViewController *> *)pendingViewControllers
 {
-    [pendingViewControllers enumerateObjectsUsingBlock:^(DataViewController * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        NSUInteger index = [self.modelController indexOfViewController:obj];
-       NSUInteger annotationIndex = [self.mapView.annotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            return [obj.subtitle isEqualToString:[NSString stringWithFormat:@"Hour %lu", index + 1]];
-        }];
-        MKPointAnnotation *annotation = self.mapView.annotations[annotationIndex];
-        NSLog(@"\t-------- INDEX %lu %@", index, self.mapView.annotations[annotationIndex].subtitle);
-        [self.mapView setCenterCoordinate:annotation.coordinate animated:TRUE];
-        [self.mapView setSelectedAnnotations:@[annotation]];
+    [pendingViewControllers enumerateObjectsUsingBlock:^(DataViewController * _Nonnull dataViewController, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSUInteger index = [self.modelController indexOfViewController:dataViewController];
+//        [self positionPlanetaryHourAnnotations:index];
+        //        NSUInteger annotationIndex = [self.mapView.annotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull annotation, NSUInteger idx, BOOL * _Nonnull stop) {
+//            NSLog(@"idx\t%lu", idx);
+//            return ([annotation.subtitle isEqualToString:[NSString stringWithFormat:@"Hour %lu", index + 1]]);
+//        }];
+//        NSLog(@"index\t%lu\t\tannotationIndex\t%lu", index, annotationIndex);
+//        if (annotationIndex < self.mapView.annotations.count)
+//        {
+//
+//        }
     }];
 }
 

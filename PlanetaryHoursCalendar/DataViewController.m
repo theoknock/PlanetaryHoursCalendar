@@ -43,10 +43,6 @@
         [subview setBackgroundColor:[UIColor clearColor]];
         [subview setOpaque:FALSE];
         [subview setAlpha:0.9];
-        // Do what you want to do with the subview
-        NSLog(@"%@", subview);
-        
-        // List the subviews of subview
         [self enumerateSubviews:subview];
     }
 }

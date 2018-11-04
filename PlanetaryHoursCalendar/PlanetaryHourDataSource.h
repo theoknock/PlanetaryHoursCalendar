@@ -89,7 +89,6 @@ typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
 @property (copy) NSString *(^planetSymbolForPlanetBlock)(Planet planet);
 @property (copy) NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval daySpan);
 @property (strong, nonatomic) dispatch_queue_t planetaryHourDataRequestQueue;
-@property (class, strong, nonatomic, readonly) NSArray<NSString *> *planetaryHourDataKeys;
 
 //- (void)planetaryHours:(_Nullable NSRangePointer *)hours date:(nullable NSDate *)date location:(nullable CLLocation *)location withCompletion:(void(^)(NSArray<NSDictionary *> *))planetaryHoursData;
 //- (void)planetaryHour:(NSUInteger)hour date:(nullable NSDate *)date location:(nullable CLLocation *)location withCompletion:(void(^)(NSDictionary *))planetaryHourData;
