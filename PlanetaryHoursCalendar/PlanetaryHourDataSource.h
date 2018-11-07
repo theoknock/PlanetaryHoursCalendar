@@ -10,6 +10,7 @@
 #import <UIKit/UIKit.h>
 #import <EventKit/EventKit.h>
 #import <CoreLocation/CoreLocation.h>
+#import <MapKit/MapKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -68,26 +69,36 @@ typedef void(^CalendarPlanetaryHours)(NSArray <NSDate *> *dates, CLLocation *loc
 typedef void(^PlanetaryHourEventCompletionBlock)(EKEvent *planetaryHourEvent);
 typedef NSDictionary *(^PlanetaryHourEventBlock)(NSUInteger hour, NSDate * _Nullable date, CLLocation * _Nullable location, PlanetaryHourEventCompletionBlock planetaryHourEventCompletionBlock);
 
+typedef NSString *(^PlanetSymbolForDay)(NSDate * _Nullable date);
+typedef NSString *(^PlanetSymbolForHour)(NSDate * _Nullable date, NSUInteger hour);
 typedef NSString *(^PlanetSymbolForPlanet)(Planet planet);
-typedef Planet(^PlanetForDay)(NSDate *date);
-typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
+typedef NSString *(^PlanetNameForDay)(NSDate * _Nullable date);
+typedef NSString *(^PlanetNameForHour)(NSDate * _Nullable date, NSUInteger hour);
+
+typedef CLLocation *(^PlanetaryHourLocation)(CLLocation * _Nullable location, NSDate * _Nullable date, NSUInteger hour);
+
+//typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
 
 #define SECONDS_PER_DAY 86400.00f
 #define HOURS_PER_SOLAR_TRANSIT 12.0f
-#define HOURS_PER_DAY 24.0f
+#define HOURS_PER_DAY 24
 #define NUMBER_OF_PLANETS 7
 
 
 @interface PlanetaryHourDataSource : NSObject <CLLocationManagerDelegate>
 
++ (nonnull PlanetaryHourDataSource *)sharedDataSource;
 @property (strong, nonatomic) CLLocationManager *locationManager;
 
-@property (strong, nonatomic) PlanetSymbolForPlanet planetSymbolForPlanet;
-@property (strong, nonatomic) PlanetForDay pd;
-@property (strong, nonatomic) HourDurations hd;
-@property (copy) Planet(^PlanetForDay)(NSDate *date);
-@property (copy) NSString *(^planetSymbolForPlanetBlock)(Planet planet);
-@property (copy) NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval daySpan);
+//@property (strong, nonatomic) HourDurations hd;
+//@property (copy) Planet(^PlanetForDay)(NSDate *date);
+@property (copy) NSString *(^planetSymbolForDay)(NSDate * _Nullable date);
+@property (copy) NSString *(^planetSymbolForHour)(NSDate * _Nullable date, NSUInteger hour);
+@property (copy) NSString *(^planetSymbolForPlanet)(Planet planet);
+@property (copy) NSString *(^planetNameForDay)(NSDate * _Nullable date);
+@property (copy) NSString *(^planetNameForHour)(NSDate * _Nullable date, NSUInteger hour);
+@property (copy) CLLocation *(^planetaryHourLocation)(CLLocation * _Nullable location, NSDate * _Nullable date, NSUInteger hour);
+//@property (copy) NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval daySpan);
 @property (strong, nonatomic) dispatch_queue_t planetaryHourDataRequestQueue;
 
 //- (void)planetaryHours:(_Nullable NSRangePointer *)hours date:(nullable NSDate *)date location:(nullable CLLocation *)location withCompletion:(void(^)(NSArray<NSDictionary *> *))planetaryHoursData;
@@ -100,11 +111,10 @@ typedef NSArray<NSNumber *> *(^HourDurations)(NSTimeInterval daySpan);
 @property (copy) void(^calendarForEventStore)(EKEventStore *eventStore, CalendarForEventStoreCompletionBlock completionBlock);
 @property (copy) void(^calendarPlanetaryHours)(NSDate * _Nullable date, CLLocation * _Nullable location, CalendarPlanetaryHourEventsCompletionBlock completionBlock);
 //@property (copy) NSArray *(^planetaryHoursEvents)(NSDate * _Nullable date, CLLocation * _Nullable location);
-- (NSArray *)planetaryHoursEventsForDate:(NSDate *)date location:(CLLocation *)location;
+- (NSArray *)planetaryHoursEventsForDate:(nullable NSDate *)date location:(nullable CLLocation *)location;
 @property (copy) void(^planetaryHourEventBlock)(NSUInteger hour, NSDate * _Nullable date, CLLocation * _Nullable location, PlanetaryHourEventCompletionBlock planetaryHourCompletionBlock);
 
 - (void)calendarPlanetaryHoursForDate:(nullable NSDate *)date location:(nullable CLLocation *)location completionBlock:(CalendarPlanetaryHourEventsCompletionBlock)completionBlock;
-+ (nonnull PlanetaryHourDataSource *)sharedDataSource;
 
 + (NSArray<NSString *> *)planetaryHourDataKeys;
 

@@ -11,12 +11,11 @@
 #import "DataViewController.h"
 #import "PlanetaryHourDataSource.h"
 #import "FESSolarCalculator.h"
+#import "MKPointAnnotation+MKPointAnnotation_DispatchTimer.h"
 
 @interface RootViewController ()
 {
-    MKGeodesicPolyline *planetaryHoursPolyline;
-    NSUInteger planetaryHourAnnotationPosition;
-    CATextLayer *planetaryHourSymbolTextLayer;
+    MKUserLocation *lastUserLocation;
 }
 
 @property (readonly, strong, nonatomic) ModelController *modelController;
@@ -29,6 +28,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    CLLocation *userCoordinate = [[CLLocation alloc] initWithLatitude:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.latitude longitude:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.longitude];
     [PlanetaryHourDataSource.sharedDataSource calendarPlanetaryHoursForDate:nil location:nil completionBlock:^{
         dispatch_async(dispatch_get_main_queue(), ^{
             self.pageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationVertical options:nil];
@@ -44,15 +44,12 @@
             
             [self.pageViewController didMoveToParentViewController:self];
             
-            [self.mapView setRegion:MKCoordinateRegionMake(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate, MKCoordinateSpanMake(0.01, 0.01)) animated:TRUE];
-            
-//            [self.mapView setPitchEnabled:TRUE];
-//            MKMapCamera *mapCamera = [MKMapCamera cameraLookingAtCenterCoordinate:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate fromDistance:(CLLocationDistance)500.0 pitch:45.0 heading:(CLLocationDirection)0.0];
-//            [self.mapView setCamera:mapCamera animated:TRUE];
-//            [self addPlanetaryHourAnnotations];
-            [self positionPlanetaryHourAnnotations];
         });
     }];
+    
+    //    timeChangeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:@"UIApplicationSignificantTimeChangeNotification" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
+    //        [self calendarPlanetaryHour];
+    //    }];
 }
 
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id <MKOverlay>)overlay
@@ -67,7 +64,7 @@
     renderer.alpha = 0.5;
     
     return renderer;
-} 
+}
 
 //- (void)addPlanetaryHourAnnotations
 //{
@@ -127,38 +124,10 @@
 //    [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
 //}
 
-void(^addPlanetaryHourAnnotation)(NSString *, NSString *, CLLocationCoordinate2D, CLLocationCoordinate2D, CLLocationCoordinate2D, MKMapView *) = ^(NSString *title, NSString *subtitle, CLLocationCoordinate2D coordinate, CLLocationCoordinate2D start_coordinate, CLLocationCoordinate2D end_coordinate, MKMapView *mapView)
-{
-    MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
-    planetaryHourAnnotation.title = title;
-    planetaryHourAnnotation.subtitle = subtitle;
-    planetaryHourAnnotation.coordinate = coordinate;
-    [mapView addAnnotation:planetaryHourAnnotation];
-    
-    CLLocationCoordinate2D coordinates[2] = {start_coordinate, end_coordinate};
-    MKGeodesicPolyline *planetaryHourTravelLine = [MKGeodesicPolyline polylineWithCoordinates:coordinates count:2];
-    [mapView addOverlay:planetaryHourTravelLine];
-    
-};
-
-void(^positionPlanetaryHourAnnotation)(NSUInteger , CLLocationCoordinate2D, MKMapView *) = ^(NSUInteger index, CLLocationCoordinate2D coordinate, MKMapView *mapView)
-{
-    [UIView animateWithDuration:1.0 animations:^{
-        [[mapView viewForAnnotation:mapView.annotations[index]] setHidden:TRUE];
-        mapView.annotations[index].coordinate = coordinate;
-        [[mapView viewForAnnotation:mapView.annotations[index]] setHidden:FALSE];
-    } completion:^(BOOL finished) {
-        [mapView.selectedAnnotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            [mapView setRegion:MKCoordinateRegionMake(obj.coordinate, mapView.region.span) animated:TRUE];
-            *stop = TRUE;
-            return stop;
-        }];
-    }];
-};
-
-- (void)positionPlanetaryHourAnnotations
-{
-    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:PlanetaryHourDataSource.sharedDataSource.locationManager.location];
+CLLocationCoordinate2D(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSUInteger hour) {
+    if (!date) date = [NSDate date];
+    hour = hour % HOURS_PER_DAY;
+    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
     NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
     NSTimeInterval nightSpan = 86400.0f - daySpan;
     NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
@@ -169,27 +138,68 @@ void(^positionPlanetaryHourAnnotation)(NSUInteger , CLLocationCoordinate2D, MKMa
     double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
     double steps_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
     double steps_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
-    __block MKMapPoint start_point = MKMapPointForCoordinate(PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate);
-    [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull obj, NSUInteger hour, BOOL * _Nonnull stop) {
-        MKMapPoint end_point = MKMapPointMake((hour == 0) ? start_point.x : (hour < 12) ? start_point.x + width_per_day_hour : start_point.x + width_per_night_hour, start_point.y);
-        NSTimeInterval elapsedTime = [[NSDate date] timeIntervalSinceDate:solarCalculator.sunrise];
-        double day_steps   = steps_per_day_hour_second   * elapsedTime;
-        double night_steps = steps_per_night_hour_second * elapsedTime;
-        MKMapPoint currentPoint = MKMapPointMake((hour < 12) ? end_point.x - day_steps : end_point.x - night_steps, end_point.y);
-        CLLocationCoordinate2D planetaryHourCoordinate = MKCoordinateForMapPoint(currentPoint);
-        __weak typeof(MKMapView *) w_mapView = self.mapView;
-        @try {
-            if (nil != self.mapView.annotations[hour])
-                positionPlanetaryHourAnnotation(hour, planetaryHourCoordinate, w_mapView);
-        } @catch (NSException *exception) {
-            addPlanetaryHourAnnotation(PlanetaryHourDataSource.sharedDataSource.planetSymbolForPlanet(PlanetaryHourDataSource.sharedDataSource.pd([NSDate date]) + hour), [NSString stringWithFormat:@"Hour %lu", hour + 1], planetaryHourCoordinate, MKCoordinateForMapPoint(start_point), MKCoordinateForMapPoint(end_point), w_mapView);
-        } @finally {
-            start_point = end_point;
-        }
-        
-    }];
+    double steps_per_second = ((MKMapSizeWorld.width / 12.0) / 60.0) / 60.0;
+    NSTimeInterval elapsedTime = [[NSDate date] timeIntervalSinceDate:solarCalculator.sunrise];
+    MKMapPoint location_point = MKMapPointForCoordinate(location.coordinate);
+    double day_offset_for_night = location_point.x + mapSizeWorldWidthForDay;
+    MKMapPoint start_point = MKMapPointMake((hour < 12) ? (location_point.x + (width_per_day_hour * hour)) - (elapsedTime * steps_per_second) : (day_offset_for_night + (width_per_night_hour * (hour % 12))) - (elapsedTime * steps_per_second), location_point.y);
+    CLLocationCoordinate2D start_coordinate = MKCoordinateForMapPoint(start_point);
     
-    [self performSelector:@selector(positionPlanetaryHourAnnotations) withObject:0 afterDelay:1.0];
+    return start_coordinate;
+};
+
+void(^addPlanetaryHourAnnotation)(NSInteger, NSString *, NSString *, CLLocation *, MKMapView *) = ^(NSInteger hour, NSString *title, NSString *subtitle, CLLocation *location, MKMapView *mapView)
+{
+    MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
+    planetaryHourAnnotation.title = title;
+    planetaryHourAnnotation.subtitle = subtitle;
+    [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, hour)];
+    [planetaryHourAnnotation setHour:[NSNumber numberWithInteger:hour]];
+    [mapView addAnnotation:planetaryHourAnnotation];
+    
+    [planetaryHourAnnotation setTimer:dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue)];
+    dispatch_source_set_timer(planetaryHourAnnotation.timer, DISPATCH_TIME_NOW, 1.0 * NSEC_PER_SEC, DISPATCH_TIMER_STRICT);
+    dispatch_source_set_event_handler(planetaryHourAnnotation.timer, ^{
+//        [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:TRUE];
+        [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, hour)];
+//        [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:FALSE];
+        if (planetaryHourAnnotation.selected.boolValue)
+        {
+            if (!MKMapRectContainsPoint(mapView.visibleMapRect, MKMapPointForCoordinate(planetaryHourAnnotation.coordinate)))
+            dispatch_async(PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue, ^{
+                [mapView setCenterCoordinate:planetaryHourAnnotation.coordinate animated:TRUE];
+            });
+        }
+    });
+    dispatch_resume(planetaryHourAnnotation.timer);
+};
+
+- (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view
+{
+    [mapView.selectedAnnotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([(MKPointAnnotation *)obj respondsToSelector:@selector(setSelected:)])
+            [(MKPointAnnotation *)obj setSelected:[NSNumber numberWithBool:TRUE]];
+    }];
+}
+
+- (void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view
+{
+    [mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([(MKPointAnnotation *)obj respondsToSelector:@selector(setSelected:)])
+            [(MKPointAnnotation *)obj setSelected:[NSNumber numberWithBool:FALSE]];
+    }];
+}
+
+- (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation
+{
+    if (![lastUserLocation isEqual:userLocation])
+    {
+        [mapView removeAnnotations:[mapView annotations]];
+        [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull event, NSUInteger hour, BOOL * _Nonnull stop) {
+            addPlanetaryHourAnnotation(hour, event.title, event.notes, userLocation.location, mapView);
+        }];
+        lastUserLocation = userLocation;
+    }
 }
 
 // MKMapViewDefaultAnnotationViewReuseIdentifier
@@ -308,11 +318,11 @@ void(^positionPlanetaryHourAnnotation)(NSUInteger , CLLocationCoordinate2D, MKMa
         self.pageViewController.doubleSided = NO;
         return UIPageViewControllerSpineLocationMin;
     }
-
+    
     // In landscape orientation: Set set the spine location to "mid" and the page view controller's view controllers array to contain two view controllers. If the current page is even, set it to contain the current and next view controllers; if it is odd, set the array to contain the previous and current view controllers.
     DataViewController *currentViewController = self.pageViewController.viewControllers[0];
     NSArray *viewControllers = nil;
-
+    
     NSUInteger indexOfCurrentViewController = [self.modelController indexOfViewController:currentViewController];
     if (indexOfCurrentViewController == 0 || indexOfCurrentViewController % 2 == 0) {
         UIViewController *nextViewController = [self.modelController pageViewController:self.pageViewController viewControllerAfterViewController:currentViewController];
@@ -322,8 +332,8 @@ void(^positionPlanetaryHourAnnotation)(NSUInteger , CLLocationCoordinate2D, MKMa
         viewControllers = @[previousViewController, currentViewController];
     }
     [self.pageViewController setViewControllers:viewControllers direction:UIPageViewControllerNavigationDirectionForward animated:YES completion:nil];
-
-
+    
+    
     return UIPageViewControllerSpineLocationMid;
 }
 
@@ -331,17 +341,18 @@ void(^positionPlanetaryHourAnnotation)(NSUInteger , CLLocationCoordinate2D, MKMa
 {
     [pendingViewControllers enumerateObjectsUsingBlock:^(DataViewController * _Nonnull dataViewController, NSUInteger idx, BOOL * _Nonnull stop) {
         NSUInteger index = [self.modelController indexOfViewController:dataViewController];
-//        [self positionPlanetaryHourAnnotations:index];
+        //        [self positionPlanetaryHourAnnotations:index];
         //        NSUInteger annotationIndex = [self.mapView.annotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull annotation, NSUInteger idx, BOOL * _Nonnull stop) {
-//            NSLog(@"idx\t%lu", idx);
-//            return ([annotation.subtitle isEqualToString:[NSString stringWithFormat:@"Hour %lu", index + 1]]);
-//        }];
-//        NSLog(@"index\t%lu\t\tannotationIndex\t%lu", index, annotationIndex);
-//        if (annotationIndex < self.mapView.annotations.count)
-//        {
-//
-//        }
+        //            NSLog(@"idx\t%lu", idx);
+        //            return ([annotation.subtitle isEqualToString:[NSString stringWithFormat:@"Hour %lu", index + 1]]);
+        //        }];
+        //        NSLog(@"index\t%lu\t\tannotationIndex\t%lu", index, annotationIndex);
+        //        if (annotationIndex < self.mapView.annotations.count)
+        //        {
+        //
+        //        }
     }];
 }
 
 @end
+

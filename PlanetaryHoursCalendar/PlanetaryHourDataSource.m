@@ -17,10 +17,6 @@ NSString * const kPlanetaryHourLocationDataKey = @"PlanetaryHourLocationDataKey"
 
 @interface PlanetaryHourDataSource ()
 
-@property (strong, nonatomic) CLLocation *lastLocation;
-
-@property (nonatomic,strong) IBOutlet NSDateFormatter *dateFormatter;
-
 @end
 
 @implementation PlanetaryHourDataSource
@@ -41,14 +37,44 @@ static PlanetaryHourDataSource *sharedDataSource = NULL;
     return sharedDataSource;
 }
 
+static CLLocationManager *locationManager;
+- (CLLocationManager *)locationManager
+{
+    static dispatch_once_t onceSecurePredicate;
+    dispatch_once(&onceSecurePredicate,^
+                  {
+                      if (!locationManager)
+                      {
+                          locationManager = [[CLLocationManager alloc] init];
+                          if ([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
+                              [locationManager requestWhenInUseAuthorization];
+                          }
+                          [locationManager setDelegate:(id<CLLocationManagerDelegate> _Nullable)PlanetaryHourDataSource.sharedDataSource];
+                      }
+                  });
+    
+    return locationManager;
+};
+
+- (instancetype)init
+{
+    if (self == [super init])
+    {
+                self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
+//                self.planetaryHourDataRequestQueue = dispatch_queue_create("Planetary Hour Data Request Queue", DISPATCH_QUEUE_SERIAL);
+    }
+    
+    return self;
+}
+
+
 //static NSArray<NSString *> *_planetaryHourDataKeys = NULL;
 //+ (NSArray<NSString *> *)planetaryHourDataKeys {
 //    return @[kPlanetaryHourSymbolDataKey, kPlanetaryHourNameDataKey, kPlanetaryHourBeginDataKey, kPlanetaryHourEndDataKey, kPlanetaryHourLocationDataKey];
 //}
 
-NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
-   //printf("\n%s\n", __PRETTY_FUNCTION__);
-    planet = planet % 7;
+NSString *(^planetSymbolForPlanet)(Planet) = ^(Planet planet) {
+    planet = planet % NUMBER_OF_PLANETS;
     switch (planet) {
         case Sun:
             return @"☉";
@@ -76,44 +102,111 @@ NSString *(^planetSymbol)(Planet) = ^(Planet planet) {
     }
 };
 
-- (instancetype)init
+Planet(^planetForDay)(NSDate * _Nullable) = ^(NSDate * _Nullable date) {
+    if (!date) date = [NSDate date];
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    Planet planet = [calendar component:NSCalendarUnitWeekday fromDate:date] - 1;
+    
+    return planet;
+};
+
+Planet(^planetForHour)(NSDate * _Nullable, NSUInteger) = ^(NSDate * _Nullable date, NSUInteger hour) {
+    hour = hour % HOURS_PER_DAY;
+    Planet planet = (planetForDay(date) + hour) % NUMBER_OF_PLANETS;
+    
+    return planet;
+};
+
+NSString *(^planetNameForDay)(NSDate * _Nullable) = ^(NSDate * _Nullable date)
 {
-    if (self == [super init])
-    {
-//        printf("\n%s\n", __PRETTY_FUNCTION__);
-        self.planetSymbolForPlanet = planetSymbolForPlanetBlock;
-        self.pd = planetForDay;
-        self.hd = hourDurations;
-//        self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
-        self.planetaryHourDataRequestQueue = dispatch_queue_create("Planetary Hour Data Request Queue", DISPATCH_QUEUE_SERIAL);
-        [[self locationManager] startMonitoringSignificantLocationChanges];
-        [[self locationManager] requestLocation];
+    Day day = (Day)planetForDay(date);
+    switch (day) {
+        case SUN:
+            return @"Sun";
+            break;
+        case MON:
+            return @"Moon";
+            break;
+        case TUE:
+            return @"Mars";
+            break;
+        case WED:
+            return @"Venus";
+            break;
+        case THU:
+            return @"Jupiter";
+            break;
+        case FRI:
+            return @"Venus";
+            break;
+        case SAT:
+            return @"Saturn";
+            break;
+        default:
+            break;
     }
-    
-    return self;
-}
+};
 
-#pragma mark - Location Services
+NSString *(^planetSymbolForDay)(NSDate * _Nullable) = ^(NSDate * _Nullable date) {
+    return planetSymbolForPlanet(planetForDay(date));
+};
 
-static CLLocationManager *locationManager = NULL;
-- (CLLocationManager *)locationManager
+NSString *(^planetNameForHour)(NSDate * _Nullable, NSUInteger) = ^(NSDate * _Nullable date, NSUInteger hour)
 {
-    static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate,^
-                  {
-                      if (!locationManager)
-                      {
-                          locationManager = [[CLLocationManager alloc] init];
-                          if ([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
-                              [locationManager requestWhenInUseAuthorization];
-                          }
-                          locationManager.pausesLocationUpdatesAutomatically = TRUE;
-                          [locationManager setDelegate:(id<CLLocationManagerDelegate> _Nullable)self];
-                      }
-                  });
-    
-    return locationManager;
-}
+    switch (planetForHour(date, hour)) {
+        case Sun:
+            return @"Sun";
+            break;
+        case Moon:
+            return @"Moon";
+            break;
+        case Mars:
+            return @"Mars";
+            break;
+        case Mercury:
+            return @"Venus";
+            break;
+        case Jupiter:
+            return @"Jupiter";
+            break;
+        case Venus:
+            return @"Venus";
+            break;
+        case Saturn:
+            return @"Saturn";
+            break;
+        default:
+            break;
+    }
+};
+
+NSString *(^planetSymbolForHour)(NSDate * _Nullable, NSUInteger) = ^(NSDate * _Nullable date, NSUInteger hour) {
+    return planetSymbolForPlanet(planetForHour(date, hour));
+};
+
+//CLLocation *(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSUInteger hour) {
+//    if (!date) date = [NSDate date];
+//    hour = hour % HOURS_PER_DAY;
+//    if (!location) location = locator().location;
+//    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+//    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+//    NSTimeInterval nightSpan = 86400.0f - daySpan;
+//    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
+//    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
+//    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
+//    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
+//    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
+//    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
+////    double steps_per_day_hour_second = (width_per_day_hour / 60.0) / 60.0;
+////    double steps_per_night_hour_second = (width_per_night_hour / 60.0) / 60.0;
+////    NSTimeInterval elapsedTime = [[NSDate date] timeIntervalSinceDate:solarCalculator.sunrise];
+//    MKMapPoint location_point = MKMapPointForCoordinate(location.coordinate);
+//    MKMapPoint start_point = MKMapPointMake((hour < 12) ? location_point.x + (width_per_day_hour * hour) : (location_point.x + mapSizeWorldWidthForDay) + (width_per_night_hour * (hour % 12)), location_point.y);
+//    CLLocationCoordinate2D start_coordinate = MKCoordinateForMapPoint(start_point);
+//    CLLocation *coordinate = [[CLLocation alloc] initWithLatitude:start_coordinate.latitude longitude:start_coordinate.latitude];
+//    
+//    return coordinate;
+//};
 
 #pragma mark <CLLocationManagerDelegate methods>
 
@@ -135,6 +228,8 @@ static CLLocationManager *locationManager = NULL;
         if (authStatus == kCLAuthorizationStatusAuthorizedWhenInUse ||
             authStatus == kCLAuthorizationStatusAuthorizedAlways)
         {
+            //[manager requestLocation];
+            [manager startMonitoringSignificantLocationChanges];
             NSLog(@"Location services authorized");
         }
     }
@@ -143,14 +238,15 @@ static CLLocationManager *locationManager = NULL;
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
 {
 //    NSLog(@"%s", __PRETTY_FUNCTION__);
-    CLLocation *currentLocation = [locations lastObject];
-    if ((self.lastLocation == nil) || (((self.lastLocation.coordinate.latitude != currentLocation.coordinate.latitude) || (self.lastLocation.coordinate.longitude != currentLocation.coordinate.longitude)) && ((currentLocation.coordinate.latitude != 0.0) || (currentLocation.coordinate.longitude != 0.0)))) {
-        self.lastLocation = [[CLLocation alloc] initWithLatitude:currentLocation.coordinate.latitude longitude:currentLocation.coordinate.longitude];
-        NSLog(@"%s", __PRETTY_FUNCTION__);
-        //    [[NSNotificationCenter defaultCenter] postNotificationName:@"PlanetaryHoursDataSourceUpdatedNotification"
-        //                                                        object:nil
-        //                                                      userInfo:nil];
-    }
+//    NSLog(@"User location\t%f", locations.lastObject.coordinate.longitude);
+//    CLLocation *currentLocation = [locations lastObject];
+//    if ((self.lastLocation == nil) || (((self.lastLocation.coordinate.latitude != currentLocation.coordinate.latitude) || (self.lastLocation.coordinate.longitude != currentLocation.coordinate.longitude)) && ((currentLocation.coordinate.latitude != 0.0) || (currentLocation.coordinate.longitude != 0.0)))) {
+//        self.lastLocation = [[CLLocation alloc] initWithLatitude:currentLocation.coordinate.latitude longitude:currentLocation.coordinate.longitude];
+//        NSLog(@"%s", __PRETTY_FUNCTION__);
+//        //    [[NSNotificationCenter defaultCenter] postNotificationName:@"PlanetaryHoursDataSourceUpdatedNotification"
+//        //                                                        object:nil
+//        //                                                      userInfo:nil];
+//    }
 }
 
 - (void)dealloc
@@ -320,32 +416,6 @@ void(^cachedSunriseSunsetData)(CLLocation * _Nullable, NSDate * _Nullable, Cache
             }
         }] resume];
     }
-};
-
-Planet(^planetForDay)(NSDate *) = ^(NSDate *date)
-{
-//    printf(."\n%s\n", __PRETTY_FUNCTION__);
-    
-    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-    long weekDay = (Day)[calendar component:NSCalendarUnitWeekday fromDate:date] - 1;
-    weekDay = (weekDay < 0) ? 0 : weekDay;
-    Planet planet = weekDay;
-    
-    return planet;
-};
-
-NSString *(^planetSymbolForPlanetBlock)(Planet) = ^(Planet planetForDay)
-{
-//    printf("\n%s\n", __PRETTY_FUNCTION__);
-    
-    return planetSymbol(planetForDay);
-};
-
-NSString *(^planetNameForHour)(Planet, NSUInteger) = ^(Planet planetForDay, NSUInteger hour)
-{
-    printf("\n%s\n", __PRETTY_FUNCTION__);
-    
-    return planetName((planetForDay + hour) % NUMBER_OF_PLANETS);
 };
 
 //NSDictionary *(^planetaryHourData)(NSArray<NSNumber *> *, NSUInteger, NSArray<NSDate *> *, CLLocationCoordinate2D) = ^(NSArray<NSNumber *> *hourDurations, NSUInteger hour, NSArray<NSDate *> *dates, CLLocationCoordinate2D coordinate)
@@ -527,9 +597,8 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 {
     Meridian meridian                = (hour < HOURS_PER_SOLAR_TRANSIT) ? AM : PM;
     SolarTransit transit             = (hour < HOURS_PER_SOLAR_TRANSIT) ? Sunrise : Sunset;
-    Planet planet                    = planetForDay(dates.firstObject);
-    NSString *symbol                 = planetSymbolForPlanetBlock(planet + hour);
-    NSString *name                   = planetNameForHour(planet, hour);
+    NSString *symbol                 = planetSymbolForHour(dates.firstObject, hour);
+    NSString *name                   = planetNameForHour(dates.firstObject, hour);
     NSString *hour_ordinal            = [NSString stringWithFormat:@"(Hour %lu)", hour + 1];
     hour = hour % 12;
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
@@ -539,10 +608,11 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     
     EKEvent *event     = [EKEvent eventWithEventStore:eventStore];
     event.calendar     = calendar;
-    event.title        = [NSString stringWithFormat:@"%@  %@", symbol, name];
+    event.title        = symbol;
     event.availability = EKEventAvailabilityFree;
     event.alarms       = @[[EKAlarm alarmWithAbsoluteDate:startTime]];
-    event.location     = [NSString stringWithFormat:@"%f, %f", location.coordinate.latitude, location.coordinate.longitude];
+    event.location     = [NSString stringWithFormat:@"%f\t%f", location.coordinate.latitude, location.coordinate.longitude];
+//    NSLog(@"Location coordinates\t%@", [NSString stringWithFormat:@"%f", locationManager.location.coordinate.longitude]);
     event.notes        = [NSString stringWithFormat:@"%@", hour_ordinal];
     event.startDate    = startTime;
     event.endDate      = endTime;
@@ -554,10 +624,25 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 - (void)calendarPlanetaryHoursForDate:(nullable NSDate *)date location:(nullable CLLocation *)location completionBlock:(CalendarPlanetaryHourEventsCompletionBlock)completionBlock {
     //void(^calendarPlanetaryHours)(NSDate * _Nullable, CLLocation * _Nullable, dispatch_block_t) = ^(NSDate * _Nullable date, CLLocation * _Nullable location, dispatch_block_t block) {
     NSLog(@"%s", __PRETTY_FUNCTION__);
-    location = (CLLocationCoordinate2DIsValid(location.coordinate)) ? locationManager.location : location;
+    location = (!location) ? locationManager.location : location;
+    NSLog(@"calendarPlanetaryHoursForDate\t%@", location.description);
     date     = (!date) ? [NSDate date] : date;
     //cachedSunriseSunsetData(location, date, ^(NSArray<NSDate *> * _Nonnull sunriseSunsetDates) {
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+    
+    // TO-DO: Roll back date one day if before sunrise of current day
+    // if the current time is before the sunrise time of that current day, then get the sunrise date for the previous day
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *components = [[NSDateComponents alloc] init];
+    NSDate *currentDate = [NSDate date];
+    NSDate *earlierDate = [currentDate earlierDate:date];
+    if ([currentDate isEqualToDate:earlierDate])
+    {
+        components.day = -1;
+        date = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+        solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+    }
+    
     EKEventStore *eventStore = [[EKEventStore alloc] init];
     [eventStore requestAccessToEntityType:EKEntityTypeEvent completion:^(BOOL granted, NSError * _Nullable error) {
         NSLog(@"Request for access to entity type event %@", (granted) ? @"granted" : @"denied");
@@ -607,7 +692,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 
 - (NSArray *)planetaryHoursEventsForDate:(NSDate *)date location:(CLLocation *)location
 {
-    location = (CLLocationCoordinate2DIsValid(location.coordinate)) ? locationManager.location : location;
+    location = (!location) ? locationManager.location : location;
     date     = (!date) ? [NSDate date] : date;
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
     NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
