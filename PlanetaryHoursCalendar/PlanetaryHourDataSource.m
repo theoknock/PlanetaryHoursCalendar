@@ -607,7 +607,6 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     NSDate *endTime                  = [[NSDate alloc] initWithTimeInterval:endTimeInterval sinceDate:dates[transit]];
     
     EKEvent *event     = [EKEvent eventWithEventStore:eventStore];
-    [calendar setTitle:@"Planetary Hour"];
     event.timeZone     = [NSTimeZone localTimeZone];
     event.calendar     = calendar;
     event.title        = [NSString stringWithFormat:@"%@ %@ %@", symbol, name, hour_ordinal];
@@ -637,11 +636,12 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     NSDateComponents *components = [[NSDateComponents alloc] init];
     NSDate *currentDate = [NSDate date];
     NSDate *earlierDate = [currentDate earlierDate:date];
-    if ([currentDate isEqualToDate:earlierDate])
+    if (![currentDate isEqualToDate:earlierDate])
     {
         components.day = -1;
-        date = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
-        solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+        NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+        solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:location];
+        NSLog(@"Subtracting one day from date %@\nNew date %@", date, yesterday);
     }
     
     EKEventStore *eventStore = [[EKEventStore alloc] init];
