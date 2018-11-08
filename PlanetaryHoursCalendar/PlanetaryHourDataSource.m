@@ -573,7 +573,7 @@ static NSDateFormatter *timeFormatter = NULL;
     dispatch_once(&onceToken, ^{
         if (!timeFormatter) {
             timeFormatter = [[NSDateFormatter alloc] init];
-            [timeFormatter setDateStyle:NSDateFormatterShortStyle];
+//            [timeFormatter setDateStyle:NSDateFormatterShortStyle];
             [timeFormatter setTimeStyle:NSDateFormatterShortStyle];
         }
     });
@@ -599,7 +599,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     SolarTransit transit             = (hour < HOURS_PER_SOLAR_TRANSIT) ? Sunrise : Sunset;
     NSString *symbol                 = planetSymbolForHour(dates.firstObject, hour);
     NSString *name                   = planetNameForHour(dates.firstObject, hour);
-    NSString *hour_ordinal            = [NSString stringWithFormat:@"(Hour %lu)", hour + 1];
+    NSString *hour_ordinal            = [NSString stringWithFormat:@"(%lu)", hour + 1];
     hour = hour % 12;
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
     NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:dates[transit]];
@@ -607,13 +607,14 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     NSDate *endTime                  = [[NSDate alloc] initWithTimeInterval:endTimeInterval sinceDate:dates[transit]];
     
     EKEvent *event     = [EKEvent eventWithEventStore:eventStore];
+    [calendar setTitle:@"Planetary Hour"];
+    event.timeZone     = [NSTimeZone localTimeZone];
     event.calendar     = calendar;
-    event.title        = symbol;
+    event.title        = [NSString stringWithFormat:@"%@ %@ %@", symbol, name, hour_ordinal];
     event.availability = EKEventAvailabilityFree;
     event.alarms       = @[[EKAlarm alarmWithAbsoluteDate:startTime]];
     event.location     = [NSString stringWithFormat:@"%f\t%f", location.coordinate.latitude, location.coordinate.longitude];
-//    NSLog(@"Location coordinates\t%@", [NSString stringWithFormat:@"%f", locationManager.location.coordinate.longitude]);
-    event.notes        = [NSString stringWithFormat:@"%@", hour_ordinal];
+    event.notes        = [NSString stringWithFormat:@"%@\n%@ to %@", hour_ordinal, [PlanetaryHourDataSource.sharedDataSource.timeFormatter stringFromDate:startTime], [PlanetaryHourDataSource.sharedDataSource.timeFormatter stringFromDate:endTime]];
     event.startDate    = startTime;
     event.endDate      = endTime;
     event.allDay       = NO;
