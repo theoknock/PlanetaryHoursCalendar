@@ -599,7 +599,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     SolarTransit transit             = (hour < HOURS_PER_SOLAR_TRANSIT) ? Sunrise : Sunset;
     NSString *symbol                 = planetSymbolForHour(dates.firstObject, hour);
     NSString *name                   = planetNameForHour(dates.firstObject, hour);
-    NSString *hour_ordinal            = [NSString stringWithFormat:@"(%lu)", hour + 1];
+    NSString *hour_ordinal           = [NSString stringWithFormat:@"Hour %lu (%@)", hour + 1, (hour < 12) ? @"Day" : @"Night"];
     hour = hour % 12;
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
     NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:dates[transit]];
@@ -609,7 +609,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     EKEvent *event     = [EKEvent eventWithEventStore:eventStore];
     event.timeZone     = [NSTimeZone localTimeZone];
     event.calendar     = calendar;
-    event.title        = [NSString stringWithFormat:@"%@ %@ %@", symbol, name, hour_ordinal];
+    event.title        = [NSString stringWithFormat:@"%@ %@", symbol, name];
     event.availability = EKEventAvailabilityFree;
     event.alarms       = @[[EKAlarm alarmWithAbsoluteDate:startTime]];
     event.location     = [NSString stringWithFormat:@"%f\t%f", location.coordinate.latitude, location.coordinate.longitude];
@@ -695,7 +695,23 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 {
     location = (!location) ? locationManager.location : location;
     date     = (!date) ? [NSDate date] : date;
+    //cachedSunriseSunsetData(location, date, ^(NSArray<NSDate *> * _Nonnull sunriseSunsetDates) {
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+    
+    // TO-DO: Roll back date one day if before sunrise of current day
+    // if the current time is before the sunrise time of that current day, then get the sunrise date for the previous day
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *components = [[NSDateComponents alloc] init];
+    NSDate *currentDate = [NSDate date];
+    NSDate *earlierDate = [currentDate earlierDate:date];
+    if (![currentDate isEqualToDate:earlierDate])
+    {
+        components.day = -1;
+        NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+        solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:location];
+        NSLog(@"Subtracting one day from date %@\nNew date %@", date, yesterday);
+    }
+    
     NSTimeInterval daySpan = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
     NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:24];
     for (NSInteger hour = 0; hour < 24; hour++) {
