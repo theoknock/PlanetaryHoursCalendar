@@ -126,39 +126,38 @@
 //    [self performSelector:@selector(repositionPlanetaryHourAnnotations) withObject:nil afterDelay:1.0];
 //}
 
-CLLocationCoordinate2D(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSTimeInterval, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSTimeInterval timeOffset, NSUInteger hour) {
+NSDictionary *(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSTimeInterval, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSTimeInterval timeOffset, NSUInteger hour) {
     if (!date) date = [NSDate date];
     hour = hour % HOURS_PER_DAY;
     FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
-    NSTimeInterval daySpan   = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
-    NSTimeInterval nightSpan = 86400.0f - daySpan;
-    NSTimeInterval dayPercentage   = daySpan   / 86400.0f;
-    NSTimeInterval nightPercentage = nightSpan / 86400.0f;
-    double mapSizeWorldWidthForDay   = MKMapSizeWorld.width * dayPercentage;
-    double mapSizeWorldWidthForNight = MKMapSizeWorld.width * nightPercentage;
-    double width_per_day_hour   = mapSizeWorldWidthForDay / 12.0;
-    double width_per_night_hour = mapSizeWorldWidthForNight / 12.0;
-    double steps_per_second_day_hour = (width_per_day_hour / 60.0) / 60.0;
-    double steps_per_second_night_hour = (width_per_night_hour / 60.0) / 60.0;
-    //double steps_per_second = ((MKMapSizeWorld.width / 12.0) / 60.0) / 60.0;
+    NSTimeInterval seconds_in_day    = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+    NSTimeInterval seconds_in_night  = SECONDS_PER_DAY - seconds_in_day;
+    double meters_per_second         = MKMapSizeWorld.width / SECONDS_PER_DAY;
+    double meters_per_day            = seconds_in_day   * meters_per_second;
+    double meters_per_night          = seconds_in_night * meters_per_second;
+    double meters_per_day_per_hour   = meters_per_day / HOURS_PER_SOLAR_TRANSIT;
+    double meters_per_night_per_hour = meters_per_night / HOURS_PER_SOLAR_TRANSIT;
+    NSLog(@"seconds_in_day\t\t%f\nseconds_in_night\t\t%f\nmeters_per_second\t\t%f\nmeters_per_day\t\t%f\nmeters_per_night\t\t%f\nmeters_per_day_per_hour\t\t%f\nmeters_per_night_per_hour\t\t%f",
+          seconds_in_day, seconds_in_night, meters_per_second, meters_per_day, meters_per_night, meters_per_day_per_hour, meters_per_night_per_hour);
     if (timeOffset == 0)
         timeOffset = [[NSDate date] timeIntervalSinceDate:solarCalculator.sunrise];
+    MKMapPoint user_location_point = MKMapPointForCoordinate(location.coordinate);
+    MKMapPoint planetary_hour_point = MKMapPointMake((hour < HOURS_PER_SOLAR_TRANSIT) ? user_location_point.x - (meters_per_day_per_hour * hour) : user_location_point.x - (meters_per_day + (meters_per_night_per_hour * (hour % 12))), user_location_point.y);
+    CLLocationCoordinate2D start_coordinate = MKCoordinateForMapPoint(planetary_hour_point);
     
-    MKMapPoint location_point = MKMapPointForCoordinate(location.coordinate);
-    double day_offset_for_night = location_point.x + mapSizeWorldWidthForDay;
-    MKMapPoint start_point = MKMapPointMake((hour < 12) ? (location_point.x + (width_per_day_hour * hour)) - (timeOffset * steps_per_second_day_hour) : (day_offset_for_night + (width_per_night_hour * (hour % 12))) - (timeOffset * steps_per_second_night_hour), location_point.y);
-    CLLocationCoordinate2D start_coordinate = MKCoordinateForMapPoint(start_point);
+    NSDictionary *planetaryHourData = @{@"location" : [NSValue valueWithMKCoordinate:start_coordinate],
+                                        @"sunrise"  : solarCalculator.sunrise};
     
-    return start_coordinate;
+    return planetaryHourData;
 };
 
 NSTimeInterval elapsedTimeCounter;
-void(^addPlanetaryHourAnnotation)(NSInteger, NSString *, NSString *, CLLocation *, MKMapView *) = ^(NSInteger hour, NSString *title, NSString *subtitle, CLLocation *location, MKMapView *mapView)
+void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, CLLocation *, MKMapView *) = ^(UILabel *timeLabel, NSInteger hour, NSString *title, NSString *subtitle, CLLocation *location, MKMapView *mapView)
 {
     MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
     planetaryHourAnnotation.title = title;
     planetaryHourAnnotation.subtitle = subtitle;
-    [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, 0, hour)];
+    [planetaryHourAnnotation setCoordinate:(CLLocationCoordinate2D)[(NSValue *)[(NSDictionary *)planetaryHourLocation(location, nil, 0, hour) objectForKey:@"location"] MKCoordinateValue]];
     [planetaryHourAnnotation setHour:[NSNumber numberWithInteger:hour]];
     [mapView addAnnotation:planetaryHourAnnotation];
     
@@ -166,8 +165,16 @@ void(^addPlanetaryHourAnnotation)(NSInteger, NSString *, NSString *, CLLocation 
     dispatch_source_set_timer(planetaryHourAnnotation.timer, DISPATCH_TIME_NOW, 1.0 * NSEC_PER_SEC, DISPATCH_TIMER_STRICT);
     dispatch_source_set_event_handler(planetaryHourAnnotation.timer, ^{
         [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:TRUE];
-        elapsedTimeCounter = (elapsedTimeCounter < 86400.0) ? elapsedTimeCounter + ((86400.0/60.0) / 60.0) : 0.0;
-        [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, elapsedTimeCounter, hour)];
+        
+        elapsedTimeCounter = (elapsedTimeCounter < 86400.0) ? elapsedTimeCounter + ((86400.0 / 60.0) / 60.0) : 0.0;
+        NSDictionary *planetaryHourLocationData = (NSDictionary *)planetaryHourLocation(location, nil, 0, hour);
+        NSDate *coordinateDate = [(NSDate *)[planetaryHourLocationData objectForKey:@"sunrise"] dateByAddingTimeInterval:elapsedTimeCounter];
+        NSInteger seconds = [[NSTimeZone defaultTimeZone] secondsFromGMTForDate:coordinateDate];
+        [planetaryHourAnnotation setTitle:[NSString stringWithFormat:@"%lu %@", hour, [[NSDate dateWithTimeInterval:seconds sinceDate:coordinateDate] description]]];
+        NSInteger current_seconds = [[NSTimeZone defaultTimeZone] secondsFromGMTForDate:[NSDate date]];
+        [timeLabel setText:[[NSDate dateWithTimeInterval:current_seconds sinceDate:coordinateDate] description]];
+        [planetaryHourAnnotation setCoordinate:(CLLocationCoordinate2D)[(NSValue *)[planetaryHourLocationData objectForKey:@"location"] MKCoordinateValue]];
+        
         [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:FALSE];
         if (planetaryHourAnnotation.selected.boolValue)
         {
@@ -202,7 +209,8 @@ void(^addPlanetaryHourAnnotation)(NSInteger, NSString *, NSString *, CLLocation 
     {
         [mapView removeAnnotations:[mapView annotations]];
         [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull event, NSUInteger hour, BOOL * _Nonnull stop) {
-            addPlanetaryHourAnnotation(hour, event.title, event.notes, userLocation.location, mapView);
+            __weak typeof(UILabel *) w_timeLabel = self.timeLabel;
+            addPlanetaryHourAnnotation(w_timeLabel, hour, event.title, event.notes, userLocation.location, mapView);
         }];
         lastUserLocation = userLocation;
     }
