@@ -8,6 +8,7 @@
 
 #import <MapKit/MapKit.h>
 #import <objc/runtime.h>
+#import "PlanetaryHourDataSource.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

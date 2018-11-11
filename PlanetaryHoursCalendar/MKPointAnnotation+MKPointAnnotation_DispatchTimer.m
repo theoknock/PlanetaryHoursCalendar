@@ -42,5 +42,4 @@
     return objc_getAssociatedObject(self, @selector(selected));
 }
 
-
 @end
