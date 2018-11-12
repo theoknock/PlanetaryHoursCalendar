@@ -67,7 +67,7 @@
     return renderer;
 }
 
-NSDictionary *(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSTimeInterval, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSTimeInterval timeOffset, NSUInteger hour) {
+CLLocationCoordinate2D(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSTimeInterval, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSTimeInterval timeOffset, NSUInteger hour) {
     if (!date) date = [NSDate date];
     hour = hour % HOURS_PER_DAY;
     FESSolarCalculator *solarCalculator   = [[FESSolarCalculator alloc] initWithDate:date location:location];
@@ -91,10 +91,7 @@ NSDictionary *(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullabl
     planetary_hour_origin = MKMapPointMake(planetary_hour_origin.x - (timeOffset * meters_per_second), planetary_hour_origin.y);
     CLLocationCoordinate2D start_coordinate = MKCoordinateForMapPoint(planetary_hour_origin);
     
-    NSDictionary *planetaryHourData = @{@"location" : [NSValue valueWithMKCoordinate:start_coordinate],
-                                        @"sunrise"  : solarCalculator.sunrise};
-    
-    return planetaryHourData;
+    return start_coordinate;
 };
 
 static NSDateIntervalFormatter *dateIntervalFormatter = NULL;
@@ -119,8 +116,8 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
     MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
     planetaryHourAnnotation.title = title;
     planetaryHourAnnotation.subtitle = subtitle;
-    [planetaryHourAnnotation setCoordinate:(CLLocationCoordinate2D)[(NSValue *)[(NSDictionary *)planetaryHourLocation(location, nil, 0, hour) objectForKey:@"location"] MKCoordinateValue]];
-    [planetaryHourAnnotation setHour:[NSNumber numberWithInteger:hour]];
+    [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, 0, hour)];
+    [planetaryHourAnnotation setPlanetaryHour:[NSNumber numberWithInteger:hour]];
     [mapView addAnnotation:planetaryHourAnnotation];
     
     [planetaryHourAnnotation setTimer:dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue)];
@@ -129,15 +126,10 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
         [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:TRUE];
         [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphText:[title substringWithRange:NSMakeRange(0, 1)]];
         [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setMarkerTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor yellowColor] : [UIColor blueColor]];
-         
+        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor orangeColor] : [UIColor whiteColor]];
+        
         elapsedTimeCounter = (elapsedTimeCounter < 86400.0) ? elapsedTimeCounter + ((86400.0 / 60.0) / 60.0) : 0.0;
-        NSDictionary *planetaryHourLocationData = (NSDictionary *)planetaryHourLocation(location, nil, elapsedTimeCounter, hour);
-        NSDate *coordinateDate = [(NSDate *)[planetaryHourLocationData objectForKey:@"sunrise"] dateByAddingTimeInterval:elapsedTimeCounter];
-        NSInteger seconds = [[NSTimeZone defaultTimeZone] secondsFromGMTForDate:coordinateDate];
-        [planetaryHourAnnotation setTitle:[coordinateDate description]];
-        NSInteger current_seconds = [[NSTimeZone defaultTimeZone] secondsFromGMTForDate:[NSDate date]];
-        [timeLabel setText:[[NSDate dateWithTimeInterval:current_seconds sinceDate:coordinateDate] description]];
-        [planetaryHourAnnotation setCoordinate:(CLLocationCoordinate2D)[(NSValue *)[planetaryHourLocationData objectForKey:@"location"] MKCoordinateValue]];
+        [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, elapsedTimeCounter, hour)];
         
         [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:FALSE];
         if (planetaryHourAnnotation.selected.boolValue)
@@ -283,18 +275,23 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
 {
     [pendingViewControllers enumerateObjectsUsingBlock:^(DataViewController * _Nonnull dataViewController, NSUInteger idx, BOOL * _Nonnull stop) {
         NSUInteger index = [self.modelController indexOfViewController:dataViewController];
-        //        [self positionPlanetaryHourAnnotations:index];
-        //        NSUInteger annotationIndex = [self.mapView.annotations indexOfObjectPassingTest:^BOOL(id<MKAnnotation>  _Nonnull annotation, NSUInteger idx, BOOL * _Nonnull stop) {
-        //            NSLog(@"idx\t%lu", idx);
-        //            return ([annotation.subtitle isEqualToString:[NSString stringWithFormat:@"Hour %lu", index + 1]]);
-        //        }];
-        //        NSLog(@"index\t%lu\t\tannotationIndex\t%lu", index, annotationIndex);
-        //        if (annotationIndex < self.mapView.annotations.count)
-        //        {
-        //
-        //        }
+        [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            MKPointAnnotation *annotation = (MKPointAnnotation *)obj;
+            if ([((MKPointAnnotation *)annotation) respondsToSelector:@selector(planetaryHour)])
+            {
+                if ([(MKPointAnnotation *)annotation planetaryHour].unsignedIntegerValue == index + 1) {
+                    *stop = TRUE;
+                    
+                    NSLog(@"Reposition map view...");
+                    [self.mapView setCenterCoordinate:annotation.coordinate];
+                    [self.mapView setSelectedAnnotations:@[annotation]];
+                    [self mapView:self.mapView didSelectAnnotationView:[self.mapView viewForAnnotation:annotation]];
+                }
+            }
+        }];
     }];
 }
+
 
 @end
 

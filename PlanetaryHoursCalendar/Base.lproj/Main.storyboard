@@ -18,8 +18,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="hybrid" showsUserLocation="YES" showsPointsOfInterest="NO" showsScale="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I3h-X9-ebG">
-                                <rect key="frame" x="0.0" y="-34" width="414" height="896"/>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="hybridFlyover" showsUserLocation="YES" showsPointsOfInterest="NO" showsScale="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I3h-X9-ebG">
+                                <rect key="frame" x="0.0" y="414" width="414" height="448"/>
                                 <connections>
                                     <outlet property="delegate" destination="703-4V-yAM" id="ZAC-x3-SGL"/>
                                 </connections>
@@ -46,7 +46,7 @@
                             <constraint firstItem="iAZ-4m-2z3" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="9Gh-iD-Zca"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.4" id="G5C-4b-cB9"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="asH-UJ-ubr"/>
-                            <constraint firstItem="I3h-X9-ebG" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" id="oLD-iS-8RD"/>
+                            <constraint firstItem="I3h-X9-ebG" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.5" id="oLD-iS-8RD"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="top" secondItem="iAZ-4m-2z3" secondAttribute="top" id="uGO-fz-owy"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="zZu-l5-J9Q"/>
                         </constraints>
