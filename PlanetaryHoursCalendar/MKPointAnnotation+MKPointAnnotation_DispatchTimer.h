@@ -9,6 +9,7 @@
 #import <MapKit/MapKit.h>
 #import <objc/runtime.h>
 #import "PlanetaryHourDataSource.h"
+#import "FESSolarCalculator.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,6 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, strong) NSNumber *planetaryHour;
+@property (nonatomic, strong) CLLocation *sunriseLocation;
+@property (nonatomic, strong) FESSolarCalculator *solarCalculation;
 
 @end
 

@@ -37,30 +37,17 @@ static PlanetaryHourDataSource *sharedDataSource = NULL;
     return sharedDataSource;
 }
 
-static CLLocationManager *locationManager;
-- (CLLocationManager *)locationManager
-{
-    static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate,^
-                  {
-                      if (!locationManager)
-                      {
-                          locationManager = [[CLLocationManager alloc] init];
-                          if ([locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
-                              [locationManager requestWhenInUseAuthorization];
-                          }
-                          [locationManager setDelegate:(id<CLLocationManagerDelegate> _Nullable)PlanetaryHourDataSource.sharedDataSource];
-                      }
-                  });
-    
-    return locationManager;
-};
-
 - (instancetype)init
 {
     if (self == [super init])
     {
         self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
+        
+        self.locationManager = [[CLLocationManager alloc] init];
+        if ([self.locationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {
+            [self.locationManager requestWhenInUseAuthorization];
+        }
+        [self.locationManager setDelegate:(id<CLLocationManagerDelegate> _Nullable)self];
     }
     
     return self;
@@ -250,7 +237,7 @@ NSString *(^planetSymbolForHour)(NSDate * _Nullable, NSUInteger) = ^(NSDate * _N
 
 - (void)dealloc
 {
-    [locationManager stopMonitoringSignificantLocationChanges];
+    [self.locationManager stopMonitoringSignificantLocationChanges];
 }
 
 #pragma mark - String-matching methods
@@ -540,8 +527,6 @@ void(^cachedSunriseSunsetData)(CLLocation * _Nullable, NSDate * _Nullable, Cache
 
 void(^calendarForEventStore)(EKEventStore *, CalendarForEventStoreCompletionBlock) = ^(EKEventStore *eventStore, CalendarForEventStoreCompletionBlock completionBlock)
 {
-//    printf("\n%s\n", __PRETTY_FUNCTION__);
-    
     NSArray <EKCalendar *> *calendars = [eventStore calendarsForEntityType:EKEntityTypeEvent];
     [calendars enumerateObjectsUsingBlock:^(EKCalendar * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([obj.title isEqualToString:@"Planetary Hour"]) {
@@ -565,25 +550,23 @@ void(^calendarForEventStore)(EKEventStore *, CalendarForEventStoreCompletionBloc
     }];
 };
 
-static NSDateFormatter *timeFormatter = NULL;
-- (NSDateFormatter *)timeFormatter
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        if (!timeFormatter) {
-            timeFormatter = [[NSDateFormatter alloc] init];
-//            [timeFormatter setDateStyle:NSDateFormatterShortStyle];
-            [timeFormatter setTimeStyle:NSDateFormatterShortStyle];
-        }
-    });
-    
-    return timeFormatter;
-}
+//static NSDateFormatter *timeFormatter = NULL;
+//- (NSDateFormatter *)timeFormatter
+//{
+//    static dispatch_once_t onceToken;
+//    dispatch_once(&onceToken, ^{
+//        if (!timeFormatter) {
+//            timeFormatter = [[NSDateFormatter alloc] init];
+////            [timeFormatter setDateStyle:NSDateFormatterShortStyle];
+//            [timeFormatter setTimeStyle:NSDateFormatterShortStyle];
+//        }
+//    });
+//
+//    return timeFormatter;
+//}
 
 NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval) = ^(NSTimeInterval daySpan)
 {
-//    printf("\n%s\n", __PRETTY_FUNCTION__);
-    
     NSTimeInterval dayHourDuration = daySpan / HOURS_PER_SOLAR_TRANSIT;
     NSTimeInterval nightSpan = fabs(SECONDS_PER_DAY - daySpan);
     NSTimeInterval nightHourDuration = nightSpan / HOURS_PER_SOLAR_TRANSIT;
@@ -592,18 +575,18 @@ NSArray<NSNumber *> *(^hourDurations)(NSTimeInterval) = ^(NSTimeInterval daySpan
     return hourDurations;
 };
 
-EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray<NSNumber *> *, NSDictionary *, CLLocation *) = ^(NSUInteger hour, EKEventStore *eventStore, EKCalendar *calendar, NSArray<NSNumber *> *hourDurations, NSDictionary *dates, CLLocation *location)
+EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray<NSNumber *> *, FESSolarCalculator *, CLLocationCoordinate2D) = ^(NSUInteger hour, EKEventStore *eventStore, EKCalendar *calendar, NSArray<NSNumber *> *hourDurations, FESSolarCalculator *dates, CLLocationCoordinate2D coordinate)
 {
     Meridian meridian                = (hour < HOURS_PER_SOLAR_TRANSIT) ? AM : PM;
     SolarTransit transit             = (hour < HOURS_PER_SOLAR_TRANSIT) ? Sunrise : Sunset;
-    NSString *symbol                 = planetSymbolForHour([dates objectForKey:@"sunrise"], hour);
-    NSString *name                   = planetNameForHour([dates objectForKey:@"sunrise"], hour);
+    NSString *symbol                 = planetSymbolForHour(dates.sunrise, hour);
+    NSString *name                   = planetNameForHour(dates.sunrise, hour);
     NSString *hour_ordinal           = [NSString stringWithFormat:@"Hour %lu (%@)", hour + 1, (hour < 12) ? @"Day" : @"Night"];
     hour = hour % 12;
     NSTimeInterval startTimeInterval = hourDurations[meridian].doubleValue * hour;
-    NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:(transit == Sunrise) ? [dates objectForKey:@"sunrise"] : [dates objectForKey:@"sunset"]];
+    NSDate *startTime                = [[NSDate alloc] initWithTimeInterval:startTimeInterval sinceDate:(transit == Sunrise) ? dates.sunrise : dates.sunset];
     NSTimeInterval endTimeInterval   = hourDurations[meridian].doubleValue * (hour + 1);
-    NSDate *endTime                  = [[NSDate alloc] initWithTimeInterval:endTimeInterval sinceDate:(transit == Sunrise) ? [dates objectForKey:@"sunrise"] : [dates objectForKey:@"sunset"]];
+    NSDate *endTime                  = [[NSDate alloc] initWithTimeInterval:endTimeInterval sinceDate:(transit == Sunrise) ? dates.sunrise : dates.sunset];
     
     EKEvent *event     = [EKEvent eventWithEventStore:eventStore];
     event.timeZone     = [NSTimeZone localTimeZone];
@@ -611,8 +594,8 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
     event.title        = [NSString stringWithFormat:@"%@ %@", symbol, name];
     event.availability = EKEventAvailabilityFree;
     event.alarms       = @[[EKAlarm alarmWithAbsoluteDate:startTime]];
-    event.location     = [NSString stringWithFormat:@"%f\t%f", location.coordinate.latitude, location.coordinate.longitude];
-    event.notes        = [NSString stringWithFormat:@"%@\n%@ to %@", hour_ordinal, [PlanetaryHourDataSource.sharedDataSource.timeFormatter stringFromDate:startTime], [PlanetaryHourDataSource.sharedDataSource.timeFormatter stringFromDate:endTime]];
+    event.location     = [NSString stringWithFormat:@"%f\t%f", coordinate.latitude, coordinate.longitude];
+    event.notes        = [NSString stringWithFormat:@"%@", hour_ordinal];
     event.startDate    = startTime;
     event.endDate      = endTime;
     event.allDay       = NO;
@@ -621,22 +604,22 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 };
 
 - (void)calendarPlanetaryHoursForDate:(nullable NSDate *)date location:(nullable CLLocation *)location completionBlock:(CalendarPlanetaryHourEventsCompletionBlock)completionBlock {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    NSDictionary *solarCalculation = [NSDictionary dictionaryWithDictionary:[self solarCalculationForDate:date location:location]];
     EKEventStore *eventStore = [[EKEventStore alloc] init];
     [eventStore requestAccessToEntityType:EKEntityTypeEvent completion:^(BOOL granted, NSError * _Nullable error) {
-        NSLog(@"Request for access to entity type event %@", (granted) ? @"granted" : @"denied");
+//        NSLog(@"Request for access to entity type event %@", (granted) ? @"granted" : @"denied");
         if (granted)
         {
-            NSLog(@"Access to event store granted.");
+//            NSLog(@"Access to event store granted.");
             calendarForEventStore(eventStore, ^(EKCalendar *calendar) {
-                NSTimeInterval daySpan = [[solarCalculation objectForKey:@"sunset"] timeIntervalSinceDate:[solarCalculation objectForKey:@"sunrise"]];
+                FESSolarCalculator *solarCalculation = [self solarCalculationForDate:date location:location];
+                NSTimeInterval daySpan = [solarCalculation.sunset timeIntervalSinceDate:solarCalculation.sunrise];
+                NSArray<NSNumber *> *durations = hourDurations(daySpan);
                 for (long hour = 0; hour < HOURS_PER_DAY; hour++)
                 {
                     __autoreleasing NSError *error;
-                    if ([eventStore saveEvent:planetaryHourEvent(hour, eventStore, calendar, hourDurations(daySpan), solarCalculation, location) span:EKSpanThisEvent error:&error])
+                    if ([eventStore saveEvent:planetaryHourEvent(hour, eventStore, calendar, durations, solarCalculation, location.coordinate) span:EKSpanThisEvent error:&error])
                     {
-                        NSLog(@"Event %lu saved.", (hour + 1));
+//                        NSLog(@"Event %lu saved.", (hour + 1));
                     } else {
                         NSLog(@"Error saving event: %@", error.description);
                     }
@@ -669,13 +652,14 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 
 - (NSArray *)planetaryHoursEventsForDate:(NSDate *)date location:(CLLocation *)location
 {
-    NSDictionary *solarCalculation = [self solarCalculationForDate:date location:location];
-    NSTimeInterval daySpan = [[solarCalculation objectForKey:@"sunset"] timeIntervalSinceDate:[solarCalculation objectForKey:@"sunrise"]];
+    FESSolarCalculator *solarCalculation = [self solarCalculationForDate:date location:location];
+    NSTimeInterval daySpan = [solarCalculation.sunset timeIntervalSinceDate:solarCalculation.sunrise];
+    NSArray<NSNumber *> *durations = hourDurations(daySpan);
     NSMutableArray *tempArray = [NSMutableArray arrayWithCapacity:24];
-    for (NSInteger hour = 0; hour < 24; hour++) {
-        
+    for (NSInteger hour = 0; hour < 24; hour++)
+    {
         EKEventStore *eventStore = [[EKEventStore alloc] init];
-        EKEvent *event     = planetaryHourEvent(hour, eventStore, nil, hourDurations(daySpan), solarCalculation, location);
+        EKEvent *event     = planetaryHourEvent(hour, eventStore, nil, durations, solarCalculation, location.coordinate);
         
 //        event.calendar     = nil;
 //        event.title        = @"title";
@@ -756,106 +740,23 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 //            }];
 //        });
 
-static NSCache *solarCalculationsCache;
-- (NSCache *)solarCalculationsCache
+- (FESSolarCalculator *)solarCalculationForDate:(NSDate *)date location:(CLLocation *)location
 {
-    static dispatch_once_t onceSecurePredicate;
-    dispatch_once(&onceSecurePredicate,^
-                  {
-                      if (!solarCalculationsCache)
-                      {
-                          solarCalculationsCache = [[NSCache alloc] init];
-                          solarCalculationsCache.name = @"Solar Calculations Cache";
-                      }
-                  });
-
-    return solarCalculationsCache;
-};
-
-NSString *(^generateKey)(NSDate *, CLLocationCoordinate2D) = ^(NSDate *date, CLLocationCoordinate2D coordinate)
-{
-    return [NSString stringWithFormat:@"%f,%f!%ld-%ld-%ld",
-            coordinate.latitude,
-            coordinate.longitude,
-            (long)[[NSCalendar currentCalendar] component:NSCalendarUnitYear fromDate:date],
-            (long)[[NSCalendar currentCalendar] component:NSCalendarUnitMonth fromDate:date],
-            (long)[[NSCalendar currentCalendar] component:NSCalendarUnitDay fromDate:date]];
-};
-
-
-NSDate *(^dateFromKey)(NSString *) = ^(NSString *key) {
-    NSString *dateComponent  = [[key componentsSeparatedByString:@"!"] lastObject];
-    NSString *dateComponents = [NSString stringWithFormat:@"%lu-%lu-%lu'T'00:00:00+00:00",
-                                [dateComponent componentsSeparatedByString:@"-"][0].integerValue,
-                                [dateComponent componentsSeparatedByString:@"-"][1].integerValue,
-                                [dateComponent componentsSeparatedByString:@"-"][2].integerValue];
-    NSDateFormatter *RFC3339DateFormatter = [[NSDateFormatter alloc] init];
-    RFC3339DateFormatter.locale = [NSLocale currentLocale];
-    RFC3339DateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
-    RFC3339DateFormatter.timeZone = [NSTimeZone localTimeZone];
-    NSDate *date = [RFC3339DateFormatter dateFromString:dateComponents];
-
-    return date;
-};
-
-CLLocation *(^locationFromKey)(NSString *) = ^(NSString *key) {
-    NSString *locationComponent = [[key componentsSeparatedByString:@"!"] firstObject];
-    CLLocationDegrees latitude  = [locationComponent componentsSeparatedByString:@","][0].floatValue;
-    CLLocationDegrees longitude = [locationComponent componentsSeparatedByString:@","][1].floatValue;
-    CLLocation *location = [[CLLocation alloc] initWithLatitude:latitude longitude:longitude];
-
-    return location;
-};
-
-- (NSDictionary *)solarCalculationForDate:(NSDate *)date location:(CLLocation *)location
-{
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    location = (!location) ? locationManager.location : location;
+    location = (!location) ? self.locationManager.location : location;
     date     = (!date) ? [NSDate date] : date;
-
-    NSString *key = generateKey(date, location.coordinate);
-    NSData *solarCalculationData = [solarCalculationsCache objectForKey:key];
-
-    NSDateFormatter *RFC3339DateFormatter = [[NSDateFormatter alloc] init];
-    RFC3339DateFormatter.locale = [NSLocale currentLocale];
-    RFC3339DateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
-    RFC3339DateFormatter.timeZone = [NSTimeZone localTimeZone];
-    if (!solarCalculationData)
+    FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+    
+    NSDate *earlierDate = [solarCalculator.sunrise earlierDate:date];
+    if ([earlierDate isEqualToDate:date])
     {
-        FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
         NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
         NSDateComponents *components = [[NSDateComponents alloc] init];
-        NSDate *currentDate = [NSDate date];
-        NSDate *earlierDate = [currentDate earlierDate:date];
-        if (![currentDate isEqualToDate:earlierDate])
-        {
-            components.day = -1;
-            NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
-            solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:location];
-        }
-        NSLog(@"%@", [RFC3339DateFormatter stringFromDate:solarCalculator.sunrise]);
-        NSDictionary *dictionary = @{@"sunrise" : [RFC3339DateFormatter stringFromDate:solarCalculator.sunrise],
-                                     @"sunset"  : [RFC3339DateFormatter stringFromDate:solarCalculator.sunset]};
-        NSLog(@"%@\n%@", [dictionary objectForKey:@"sunrise"], [dictionary objectForKey:@"sunset"]);
-
-        NSArray *array           = @[dictionary];
-        __autoreleasing NSError *error;
-        solarCalculationData = [NSJSONSerialization dataWithJSONObject:array
-                                                               options:NSJSONWritingPrettyPrinted
-                                                                 error:&error];
-        [solarCalculationsCache setObject:solarCalculationData forKey:key];
+        components.day = -1;
+        NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+        solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:location];
     }
-
-    __autoreleasing NSError *error;
-    NSArray *solarCalculationArray = [NSJSONSerialization JSONObjectWithData:solarCalculationData
-                                                                          options:NSJSONReadingMutableContainers
-                                                                            error:&error];
-    NSDictionary *solarCalculationDict = solarCalculationArray.firstObject;
-    NSDictionary *solarCalculation = @{@"sunrise" : [RFC3339DateFormatter dateFromString:[solarCalculationDict objectForKey:@"sunrise"]],
-                                       @"sunset"  : [RFC3339DateFormatter dateFromString:[solarCalculationDict objectForKey:@"sunset"]]};
-
-    NSLog(@"%@\n%@", [solarCalculation objectForKey:@"sunrise"], [solarCalculation objectForKey:@"sunset"]);
-    return solarCalculation;
+    
+    return solarCalculator;
 }
 
 @end

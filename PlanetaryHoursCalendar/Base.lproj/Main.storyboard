@@ -27,39 +27,35 @@
                             <containerView opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="cwB-Nb-HZ0">
                                 <rect key="frame" x="0.0" y="44" width="414" height="358.33333333333331"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <connections>
-                                    <segue destination="8aF-el-S66" kind="embed" id="kFe-p6-Jid"/>
-                                </connections>
                             </containerView>
-                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="ZUK-yN-Byt">
-                                <rect key="frame" x="47" y="646" width="320" height="216"/>
-                                <date key="date" timeIntervalSinceReferenceDate="563745241.72435498">
-                                    <!--2018-11-12 19:54:01 +0000-->
-                                </date>
+                            <slider opaque="NO" alpha="0.5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="86400" translatesAutoresizingMaskIntoConstraints="NO" id="uyd-dT-EsS">
+                                <rect key="frame" x="18.666666666666657" y="832" width="376.66666666666674" height="31"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <connections>
-                                    <action selector="datePickerViewValueChanged:" destination="703-4V-yAM" eventType="valueChanged" id="dbp-6r-PIy"/>
+                                    <action selector="elapseTime:" destination="703-4V-yAM" eventType="valueChanged" id="x7Q-Jh-rTT"/>
                                 </connections>
-                            </datePicker>
+                            </slider>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="04K-aN-Qnh"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="18B-Nc-DJC"/>
                             <constraint firstItem="iAZ-4m-2z3" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="9Gh-iD-Zca"/>
+                            <constraint firstItem="uyd-dT-EsS" firstAttribute="width" secondItem="I3h-X9-ebG" secondAttribute="width" multiplier="0.9" id="9wR-sZ-z5R"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.4" id="G5C-4b-cB9"/>
+                            <constraint firstItem="uyd-dT-EsS" firstAttribute="centerX" secondItem="I3h-X9-ebG" secondAttribute="centerX" id="LMd-kU-UjC"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="asH-UJ-ubr"/>
-                            <constraint firstItem="ZUK-yN-Byt" firstAttribute="bottom" secondItem="iAZ-4m-2z3" secondAttribute="bottom" id="o8x-vf-JPy"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.5" id="oLD-iS-8RD"/>
+                            <constraint firstItem="uyd-dT-EsS" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="oul-N9-3wm"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="top" secondItem="iAZ-4m-2z3" secondAttribute="top" id="uGO-fz-owy"/>
-                            <constraint firstItem="ZUK-yN-Byt" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="wx6-Li-90Z"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="zZu-l5-J9Q"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="iAZ-4m-2z3"/>
                     </view>
                     <connections>
                         <outlet property="containerView" destination="cwB-Nb-HZ0" id="dc9-6L-aNA"/>
-                        <outlet property="datePicker" destination="ZUK-yN-Byt" id="fgn-Es-zFb"/>
                         <outlet property="mapView" destination="I3h-X9-ebG" id="WJx-Ud-MGO"/>
+                        <outlet property="timeSlider" destination="uyd-dT-EsS" id="Mb7-kB-eiy"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Q3h-pU-vEd" sceneMemberID="firstResponder"/>
@@ -115,12 +111,59 @@
             </objects>
             <point key="canvasLocation" x="1394" y="-244"/>
         </scene>
+        <!--Date Time Picker View Controller-->
+        <scene sceneID="og0-3W-eDy">
+            <objects>
+                <viewController storyboardIdentifier="DateTimePickerViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="ekC-3z-IE0" customClass="DateTimePickerViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="TEV-9F-QTI">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="UzT-VB-XUZ">
+                                <rect key="frame" x="0.0" y="44" width="248.33333333333334" height="216"/>
+                                <date key="date" timeIntervalSinceReferenceDate="563785497.73300099">
+                                    <!--2018-11-13 07:04:57 +0000-->
+                                </date>
+                                <connections>
+                                    <action selector="dateDidChange:" destination="ekC-3z-IE0" eventType="valueChanged" id="2Xh-Jb-XV7"/>
+                                </connections>
+                            </datePicker>
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="time" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="XNJ-ku-Fqw" userLabel="Time Picker">
+                                <rect key="frame" x="248.33333333333337" y="44" width="165.66666666666663" height="216"/>
+                                <date key="date" timeIntervalSinceReferenceDate="563785502.59287703">
+                                    <!--2018-11-13 07:05:02 +0000-->
+                                </date>
+                                <connections>
+                                    <action selector="timeDidChange:" destination="ekC-3z-IE0" eventType="valueChanged" id="stk-5P-RTy"/>
+                                </connections>
+                            </datePicker>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="XNJ-ku-Fqw" firstAttribute="leading" secondItem="UzT-VB-XUZ" secondAttribute="trailing" id="6g9-RA-No6"/>
+                            <constraint firstItem="UzT-VB-XUZ" firstAttribute="width" secondItem="TEV-9F-QTI" secondAttribute="width" multiplier="0.6" id="9mI-HE-S34"/>
+                            <constraint firstItem="UzT-VB-XUZ" firstAttribute="leading" secondItem="Rzj-0M-Eq6" secondAttribute="leading" id="FBZ-b1-Onk"/>
+                            <constraint firstItem="XNJ-ku-Fqw" firstAttribute="top" secondItem="Rzj-0M-Eq6" secondAttribute="top" id="nQH-fy-yBB"/>
+                            <constraint firstItem="XNJ-ku-Fqw" firstAttribute="trailing" secondItem="Rzj-0M-Eq6" secondAttribute="trailing" id="oiV-by-YOA"/>
+                            <constraint firstItem="UzT-VB-XUZ" firstAttribute="top" secondItem="Rzj-0M-Eq6" secondAttribute="top" id="qYf-0w-cnx"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="Rzj-0M-Eq6"/>
+                    </view>
+                    <connections>
+                        <outlet property="datePickerView" destination="UzT-VB-XUZ" id="sKK-7b-gdw"/>
+                        <outlet property="timePickerView" destination="XNJ-ku-Fqw" id="fYq-wq-01e"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="w08-LL-Lw1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-858" y="-933"/>
+        </scene>
         <!--UIPageViewController-->
         <scene sceneID="J1L-WS-kNb">
             <objects>
                 <viewController title="UIPageViewController" id="8aF-el-S66" sceneMemberID="viewController">
                     <view key="view" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" id="2ey-av-u9x">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="358.33333333333331"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <viewLayoutGuide key="safeArea" id="Fx4-lR-rPa"/>

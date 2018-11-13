@@ -10,7 +10,7 @@
 
 @implementation MKPointAnnotation (MKPointAnnotation_DispatchTimer)
 
-@dynamic timer, planetaryHour;
+@dynamic timer, planetaryHour, sunriseLocation, solarCalculation;
 
 - (void)setTimer:(dispatch_source_t)timer
 {
@@ -31,5 +31,26 @@
 {
     return objc_getAssociatedObject(self, @selector(planetaryHour));
 }
+
+- (void)setSunriseLocation:(CLLocation *)sunriseLocation
+{
+    objc_setAssociatedObject(self, @selector(sunriseLocation), sunriseLocation, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (CLLocation *)sunriseLocation
+{
+    return objc_getAssociatedObject(self, @selector(sunriseLocation));
+}
+
+- (void)setSolarCalculation:(FESSolarCalculator *)solarCalculation
+{
+    objc_setAssociatedObject(self, @selector(solarCalculation), solarCalculation, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (FESSolarCalculator *)solarCalculation
+{
+    return objc_getAssociatedObject(self, @selector(solarCalculation));
+}
+
 
 @end
