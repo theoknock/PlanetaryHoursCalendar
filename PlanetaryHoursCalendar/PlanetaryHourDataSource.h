@@ -89,6 +89,7 @@ typedef CLLocation *(^PlanetaryHourLocation)(CLLocation * _Nullable location, NS
 
 + (nonnull PlanetaryHourDataSource *)sharedDataSource;
 @property (strong, nonatomic) CLLocationManager *locationManager;
+@property (strong, nonatomic) NSDateFormatter *RFC3339DateFormatter;
 
 //@property (strong, nonatomic) HourDurations hd;
 //@property (copy) Planet(^PlanetForDay)(NSDate *date);

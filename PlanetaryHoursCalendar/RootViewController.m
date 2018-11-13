@@ -102,6 +102,10 @@
     return _modelController;
 }
 
+- (IBAction)datePickerViewValueChanged:(id)sender {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+}
+
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id <MKOverlay>)overlay
 {
     if (![overlay isKindOfClass:[MKGeodesicPolyline class]]) {

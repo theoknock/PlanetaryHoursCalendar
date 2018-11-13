@@ -10,7 +10,7 @@
 #import <MapKit/MapKit.h>
 #import <CoreLocation/CoreLocation.h>
 
-@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate, DateTimePickerViewControllerDelegate>
+@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate>
 
 @property (strong, nonatomic) UIPageViewController *pageViewController;
 @property (weak, nonatomic) IBOutlet UIView *containerView;

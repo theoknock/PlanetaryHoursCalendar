@@ -36,6 +36,9 @@
                                 <date key="date" timeIntervalSinceReferenceDate="563745241.72435498">
                                     <!--2018-11-12 19:54:01 +0000-->
                                 </date>
+                                <connections>
+                                    <action selector="datePickerViewValueChanged:" destination="703-4V-yAM" eventType="valueChanged" id="dbp-6r-PIy"/>
+                                </connections>
                             </datePicker>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
