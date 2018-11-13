@@ -19,6 +19,7 @@
 		B92815842183D69A002177E0 /* EventKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B92815822183D699002177E0 /* EventKit.framework */; };
 		B92D3B9321868C2E00D72791 /* PlanetaryHourDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */; };
 		B92D3BAB2186F94E00D72791 /* FESSolarCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */; };
+		B99CFFCD219915C500A145EC /* PlanetaryHourLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = B99CFFCC219915C500A145EC /* PlanetaryHourLocation.m */; };
 		B9F1DD302190FFD300728895 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9F1DD2F2190FFD300728895 /* MapKit.framework */; };
 		B9F1DD332192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = B9F1DD322192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.m */; };
 /* End PBXBuildFile section */
@@ -27,7 +28,7 @@
 		B92815612183AB59002177E0 /* PlanetaryHoursCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanetaryHoursCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B92815642183AB59002177E0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B92815652183AB59002177E0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		B92815672183AB59002177E0 /* RootViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; };
+		B92815672183AB59002177E0 /* RootViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; wrapsLines = 0; };
 		B92815682183AB59002177E0 /* RootViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RootViewController.m; sourceTree = "<group>"; wrapsLines = 0; };
 		B928156A2183AB59002177E0 /* DataViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataViewController.h; sourceTree = "<group>"; };
 		B928156B2183AB59002177E0 /* DataViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DataViewController.m; sourceTree = "<group>"; wrapsLines = 0; };
@@ -44,6 +45,8 @@
 		B92D3B9221868C2D00D72791 /* PlanetaryHourDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlanetaryHourDataSource.h; sourceTree = "<group>"; wrapsLines = 0; };
 		B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FESSolarCalculator.m; sourceTree = "<group>"; };
 		B92D3BAA2186F94E00D72791 /* FESSolarCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESSolarCalculator.h; sourceTree = "<group>"; };
+		B99CFFCB219915C500A145EC /* PlanetaryHourLocation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlanetaryHourLocation.h; sourceTree = "<group>"; };
+		B99CFFCC219915C500A145EC /* PlanetaryHourLocation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PlanetaryHourLocation.m; sourceTree = "<group>"; };
 		B9F1DD2F2190FFD300728895 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		B9F1DD312192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MKPointAnnotation+MKPointAnnotation_DispatchTimer.h"; path = "PlanetaryHoursCalendar/MKPointAnnotation+MKPointAnnotation_DispatchTimer.h"; sourceTree = "<group>"; };
 		B9F1DD322192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = "MKPointAnnotation+MKPointAnnotation_DispatchTimer.m"; path = "PlanetaryHoursCalendar/MKPointAnnotation+MKPointAnnotation_DispatchTimer.m"; sourceTree = "<group>"; wrapsLines = 0; };
@@ -89,10 +92,12 @@
 				B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */,
 				B92D3B9221868C2D00D72791 /* PlanetaryHourDataSource.h */,
 				B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */,
+				B92815642183AB59002177E0 /* AppDelegate.h */,
 				B92815652183AB59002177E0 /* AppDelegate.m */,
 				B92815672183AB59002177E0 /* RootViewController.h */,
 				B92815682183AB59002177E0 /* RootViewController.m */,
-				B92815642183AB59002177E0 /* AppDelegate.h */,
+				B99CFFCB219915C500A145EC /* PlanetaryHourLocation.h */,
+				B99CFFCC219915C500A145EC /* PlanetaryHourLocation.m */,
 				B928156A2183AB59002177E0 /* DataViewController.h */,
 				B928156B2183AB59002177E0 /* DataViewController.m */,
 				B928156D2183AB59002177E0 /* ModelController.h */,
@@ -191,6 +196,7 @@
 				B92815692183AB59002177E0 /* RootViewController.m in Sources */,
 				B9F1DD332192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.m in Sources */,
 				B928156F2183AB59002177E0 /* ModelController.m in Sources */,
+				B99CFFCD219915C500A145EC /* PlanetaryHourLocation.m in Sources */,
 				B928156C2183AB59002177E0 /* DataViewController.m in Sources */,
 				B92815662183AB59002177E0 /* AppDelegate.m in Sources */,
 				B92D3B9321868C2E00D72791 /* PlanetaryHourDataSource.m in Sources */,

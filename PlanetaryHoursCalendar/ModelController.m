@@ -76,6 +76,15 @@ EKCalendar * _Nullable (^planetaryHourCalendar)(EKEventStore *) = ^(EKEventStore
     return self;
 }
 
+- (IBAction)datePickerViewValueChanged:(id)sender {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    [self.delegate dateTimePickerDidChangeDate:[self.datePickerView date]];
+}
+
+- (IBAction)timePickerViewValueChanged:(id)sender {
+    [self.delegate dateTimePickerDidChangeDate:[self.timePickerView date]];
+}
+
 - (DataViewController *)viewControllerAtIndex:(NSUInteger)index storyboard:(UIStoryboard *)storyboard {
     // Return the data view controller for the given index.
     if (([self.events count] == 0) || (index >= [self.events count])) {

@@ -60,8 +60,7 @@ static CLLocationManager *locationManager;
 {
     if (self == [super init])
     {
-                self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
-//                self.planetaryHourDataRequestQueue = dispatch_queue_create("Planetary Hour Data Request Queue", DISPATCH_QUEUE_SERIAL);
+        self.planetaryHourDataRequestQueue = dispatch_queue_create_with_target("Planetary Hour Data Request Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
     }
     
     return self;
@@ -798,5 +797,89 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
 //            }];
 //        });
 
+static NSCache *solarCalculationsCache;
+- (NSCache *)solarCalculationsCache
+{
+    static dispatch_once_t onceSecurePredicate;
+    dispatch_once(&onceSecurePredicate,^
+                  {
+                      if (!solarCalculationsCache)
+                      {
+                          solarCalculationsCache = [[NSCache alloc] init];
+                          solarCalculationsCache.name = @"Solar Calculations Cache";
+                      }
+                  });
+    
+    return solarCalculationsCache;
+};
+
+NSString *(^generateKey)(NSDate *, CLLocationCoordinate2D) = ^(NSDate *date, CLLocationCoordinate2D coordinate)
+{
+    return [NSString stringWithFormat:@"%f,%f!%ld-%ld-%ld",
+            coordinate.latitude,
+            coordinate.longitude,
+            (long)[[NSCalendar currentCalendar] component:NSCalendarUnitYear fromDate:date],
+            (long)[[NSCalendar currentCalendar] component:NSCalendarUnitMonth fromDate:date],
+            (long)[[NSCalendar currentCalendar] component:NSCalendarUnitDay fromDate:date]];
+};
+
+NSDate *(^dateFromKey)(NSString *) = ^(NSString *key) {
+    NSString *dateComponent       = [[key componentsSeparatedByString:@"!"] lastObject];
+    NSString *dateComponents = [NSString stringWithFormat:@"%lu-%lu-%lu'T'00:00:00+00:00",
+                                [dateComponent componentsSeparatedByString:@"-"][0].integerValue,
+                                [dateComponent componentsSeparatedByString:@"-"][1].integerValue,
+                                [dateComponent componentsSeparatedByString:@"-"][2].integerValue];
+    NSDateFormatter *RFC3339DateFormatter = [[NSDateFormatter alloc] init];
+    RFC3339DateFormatter.locale = [NSLocale currentLocale];
+    RFC3339DateFormatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ssZZZZZ";
+    RFC3339DateFormatter.timeZone = [NSTimeZone localTimeZone];
+    NSDate *date = [RFC3339DateFormatter dateFromString:dateComponents];
+
+    return date;
+};
+
+CLLocation *(^locationFromKey)(NSString *) = ^(NSString *key) {
+    NSString *locationComponent = [[key componentsSeparatedByString:@"!"] firstObject];
+    CLLocationDegrees latitude  = [locationComponent componentsSeparatedByString:@","][0].floatValue;
+    CLLocationDegrees longitude = [locationComponent componentsSeparatedByString:@","][1].floatValue;
+    CLLocation *location = [[CLLocation alloc] initWithLatitude:latitude longitude:longitude];
+
+    return location;
+};
+
+- (NSDictionary *)solarCalculationForDate:(NSDate *)date location:(CLLocation *)location
+{
+    location = (!location) ? locationManager.location : location;
+    date     = (!date) ? [NSDate date] : date;
+    NSString *key = generateKey(date, location.coordinate);
+    NSData *solarCalculationData = [solarCalculationsCache objectForKey:key];
+    __autoreleasing NSError *error;
+    if (!solarCalculationData)
+    {
+        FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+        NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSDateComponents *components = [[NSDateComponents alloc] init];
+        NSDate *currentDate = [NSDate date];
+        NSDate *earlierDate = [currentDate earlierDate:date];
+        if (![currentDate isEqualToDate:earlierDate])
+        {
+            components.day = -1;
+            NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+            solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:location];
+        }
+        solarCalculationData = [NSJSONSerialization dataWithJSONObject:@{@"sunrise" : solarCalculator.sunrise,
+                                                                         @"sunset"  : solarCalculator.sunset}
+                                                               options:NSJSONWritingPrettyPrinted
+                                                                 error:&error];
+        [solarCalculationsCache setObject:solarCalculationData forKey:key];
+    }
+    
+    NSArray *solarCalculationArray = [NSJSONSerialization JSONObjectWithData:solarCalculationData
+                                                                     options:NSJSONReadingMutableContainers
+                                                                       error:&error];
+    NSDictionary *solarCalculationDict = (NSDictionary *)solarCalculationArray.firstObject;
+    
+    return solarCalculationDict;
+}
 
 @end

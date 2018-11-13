@@ -29,28 +29,77 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    CLLocation *userCoordinate = [[CLLocation alloc] initWithLatitude:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.latitude longitude:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.longitude];
+//    MKUserTrackingButton *button = [MKUserTrackingButton userTrackingButtonWithMapView:self.mapView];
+//    [button.layer setBorderWidth:1.0];
+//    [button.layer setCornerRadius:5.0];
+//    [button setTranslatesAutoresizingMaskIntoConstraints:FALSE];
+//    
+//    [self.mapView addSubview:button];
+//    [self.mapView setUserTrackingMode:MKUserTrackingModeFollowWithHeading];
+//
+//    [NSLayoutConstraint activateConstraints:@[[button.bottomAnchor constraintEqualToAnchor:self.mapView.bottomAnchor constant:-10.0],
+//                                              [button.trailingAnchor constraintEqualToAnchor:self.mapView.trailingAnchor constant:-10.0]]];
+    
+//    CLLocation *userCoordinate = [[CLLocation alloc] initWithLatitude:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.latitude longitude:PlanetaryHourDataSource.sharedDataSource.locationManager.location.coordinate.longitude];
     [PlanetaryHourDataSource.sharedDataSource calendarPlanetaryHoursForDate:nil location:nil completionBlock:^{
         dispatch_async(dispatch_get_main_queue(), ^{
             self.pageViewController = [[UIPageViewController alloc] initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll navigationOrientation:UIPageViewControllerNavigationOrientationVertical options:nil];
             self.pageViewController.delegate = self;
-            
+
             DataViewController *startingViewController = [self.modelController viewControllerAtIndex:0 storyboard:self.storyboard];
             NSArray *viewControllers = @[startingViewController];
             [self.pageViewController setViewControllers:viewControllers direction:UIPageViewControllerNavigationDirectionForward animated:NO completion:nil];
-            
+
             self.pageViewController.dataSource = self.modelController;
-            
             [self addChild:self.pageViewController withChildToRemove:nil];
-            
             [self.pageViewController didMoveToParentViewController:self];
-            
         });
     }];
+
+//    timeChangeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:@"UIApplicationSignificantTimeChangeNotification" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
+//        [self calendarPlanetaryHour];
+//    }];
+}
+
+- (void)addChild:(UIViewController *)childToAdd withChildToRemove:(UIViewController *)childToRemove
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+    if (childToRemove != nil)
+    {
+        if ([childToRemove isKindOfClass:[UIPageViewController class]]) {
+            [childToRemove.view removeFromSuperview];
+            [childToRemove removeFromParentViewController];
+        }
+    }
     
-    //    timeChangeNotificationObserver = [[NSNotificationCenter defaultCenter] addObserverForName:@"UIApplicationSignificantTimeChangeNotification" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-    //        [self calendarPlanetaryHour];
-    //    }];
+    if (childToAdd != nil)
+    {
+        [self addChildViewController:childToAdd];
+        [childToAdd didMoveToParentViewController:self];
+        
+        if ([childToAdd isKindOfClass:[UIPageViewController class]]) {
+            CGRect pageViewRect = self.containerView.bounds;
+            if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+                pageViewRect = CGRectInset(pageViewRect, 40.0, 0.0);
+            }
+            childToAdd.view.frame = pageViewRect;
+            
+            NSLog(@"----------------------");
+            
+            [self.containerView addSubview:childToAdd.view];
+        }
+    }
+    
+    NSLog(@"Number of child view controllers: %lu", self.childViewControllers.count);
+}
+
+- (ModelController *)modelController {
+    // Return the model controller object, creating it if necessary.
+    // In more complex implementations, the model controller may be passed to the view controller.
+    if (!_modelController) {
+        _modelController = [[ModelController alloc] init];
+    }
+    return _modelController;
 }
 
 - (MKOverlayRenderer *)mapView:(MKMapView *)mapView rendererForOverlay:(id <MKOverlay>)overlay
@@ -70,7 +119,9 @@
 CLLocationCoordinate2D(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * _Nullable, NSTimeInterval, NSUInteger) = ^(CLLocation * _Nullable location, NSDate * _Nullable date, NSTimeInterval timeOffset, NSUInteger hour) {
     if (!date) date = [NSDate date];
     hour = hour % HOURS_PER_DAY;
+    // Add results to cache for quicker calculations
     FESSolarCalculator *solarCalculator   = [[FESSolarCalculator alloc] initWithDate:date location:location];
+    //
     NSTimeInterval seconds_in_day         = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
     NSTimeInterval seconds_in_night       = SECONDS_PER_DAY - seconds_in_day;
     double meters_per_second              = MKMapSizeWorld.width / SECONDS_PER_DAY;
@@ -78,12 +129,6 @@ CLLocationCoordinate2D(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * 
     double meters_per_night               = seconds_in_night * meters_per_second;
     double meters_per_day_per_hour        = meters_per_day / HOURS_PER_SOLAR_TRANSIT;
     double meters_per_night_per_hour      = meters_per_night / HOURS_PER_SOLAR_TRANSIT;
-    double meters_per_day_per_second      = (meters_per_day_per_hour / 60.0) / 60.0;
-    double meters_per_night_per_second    = (meters_per_day_per_hour / 60.0) / 60.0;
-//    NSLog(@"seconds_in_day\t\t%f\nseconds_in_night\t\t%f\nmeters_per_second\t\t%f\nmeters_per_day\t\t%f\nmeters_per_night\t\t%f\nmeters_per_day_per_hour\t\t%f\nmeters_per_night_per_hour\t\t%f",
-//          seconds_in_day, seconds_in_night, meters_per_second, meters_per_day, meters_per_night, meters_per_day_per_hour, meters_per_night_per_hour);
-//    if (timeOffset == 0)
-//        timeOffset = [[NSDate date] timeIntervalSinceDate:solarCalculator.sunrise];
     MKMapPoint user_location_point = MKMapPointForCoordinate(location.coordinate);
     MKMapPoint planetary_hour_origin = MKMapPointMake((hour < HOURS_PER_SOLAR_TRANSIT)
                                                      ? user_location_point.x + (meters_per_day_per_hour * hour)
@@ -93,6 +138,17 @@ CLLocationCoordinate2D(^planetaryHourLocation)(CLLocation * _Nullable, NSDate * 
     
     return start_coordinate;
 };
+
+- (void)dateTimePickerDidChangeDate:(NSDate *)date
+{
+    dispatch_async(PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue, ^{
+        [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull planetaryHourAnnotation, NSUInteger hour, BOOL * _Nonnull stop) {
+            // TO-DO: Send date without time, then time as interval offset
+            [planetaryHourAnnotation setCoordinate:planetaryHourLocation(self.mapView.userLocation.location, self.datePicker.date, [date timeIntervalSinceDate:[NSDate date]], hour)];
+        }];
+    });
+}
+
 
 static NSDateIntervalFormatter *dateIntervalFormatter = NULL;
 - (NSDateIntervalFormatter *)dateIntervalFormatter
@@ -111,7 +167,7 @@ static NSDateIntervalFormatter *dateIntervalFormatter = NULL;
 }
 
 NSTimeInterval elapsedTimeCounter;
-void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, CLLocation *, MKMapView *) = ^(UILabel *timeLabel, NSInteger hour, NSString *title, NSString *subtitle, CLLocation *location, MKMapView *mapView)
+void(^addPlanetaryHourAnnotation)(NSInteger, NSString *, NSString *, CLLocation *, MKMapView *) = ^(NSInteger hour, NSString *title, NSString *subtitle, CLLocation *location, MKMapView *mapView)
 {
     MKPointAnnotation *planetaryHourAnnotation = [[MKPointAnnotation alloc] init];
     planetaryHourAnnotation.title = title;
@@ -119,44 +175,48 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
     [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, 0, hour)];
     [planetaryHourAnnotation setPlanetaryHour:[NSNumber numberWithInteger:hour]];
     [mapView addAnnotation:planetaryHourAnnotation];
+    [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphText:[title substringWithRange:NSMakeRange(0, 1)]];
+    [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setMarkerTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor yellowColor] : [UIColor blueColor]];
+    [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor orangeColor] : [UIColor whiteColor]];
     
-    [planetaryHourAnnotation setTimer:dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue)];
-    dispatch_source_set_timer(planetaryHourAnnotation.timer, DISPATCH_TIME_NOW, 1.0 * NSEC_PER_SEC, DISPATCH_TIMER_STRICT);
-    dispatch_source_set_event_handler(planetaryHourAnnotation.timer, ^{
-        [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:TRUE];
-        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphText:[title substringWithRange:NSMakeRange(0, 1)]];
-        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setMarkerTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor yellowColor] : [UIColor blueColor]];
-        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor orangeColor] : [UIColor whiteColor]];
-        
-        elapsedTimeCounter = (elapsedTimeCounter < 86400.0) ? elapsedTimeCounter + ((86400.0 / 60.0) / 60.0) : 0.0;
-        [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, elapsedTimeCounter, hour)];
-        
-        [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:FALSE];
-        if (planetaryHourAnnotation.selected.boolValue)
-        {
-            if (!MKMapRectContainsPoint(mapView.visibleMapRect, MKMapPointForCoordinate(planetaryHourAnnotation.coordinate)))
-            dispatch_async(PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue, ^{
-                [mapView setCenterCoordinate:planetaryHourAnnotation.coordinate animated:TRUE];
-            });
-        }
-    });
-    dispatch_resume(planetaryHourAnnotation.timer);
+//    [planetaryHourAnnotation setTimer:dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue)];
+//    dispatch_source_set_timer(planetaryHourAnnotation.timer, DISPATCH_TIME_NOW, 1.0 * NSEC_PER_SEC, DISPATCH_TIMER_STRICT);
+//    dispatch_source_set_event_handler(planetaryHourAnnotation.timer, ^{
+//        [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:TRUE];
+//        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphText:[title substringWithRange:NSMakeRange(0, 1)]];
+//        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setMarkerTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor yellowColor] : [UIColor blueColor]];
+//        [(MKMarkerAnnotationView *)[mapView viewForAnnotation:planetaryHourAnnotation] setGlyphTintColor:(hour < HOURS_PER_SOLAR_TRANSIT) ? [UIColor orangeColor] : [UIColor whiteColor]];
+//        
+//        elapsedTimeCounter = (elapsedTimeCounter < 86400.0) ? elapsedTimeCounter + ((86400.0 / 60.0) / 60.0) : 0.0;
+//        [planetaryHourAnnotation setCoordinate:planetaryHourLocation(location, nil, elapsedTimeCounter, hour)];
+//        
+//        [[mapView viewForAnnotation:planetaryHourAnnotation] prepareForDisplay];
+//        [[mapView viewForAnnotation:planetaryHourAnnotation] setHidden:FALSE];
+//        if ([mapView.selectedAnnotations containsObject:planetaryHourAnnotation] && mapView.selectedAnnotations.count == 1.)
+//        {
+////            if (!MKMapRectContainsPoint(mapView.visibleMapRect, MKMapPointForCoordinate(planetaryHourAnnotation.coordinate)))
+//            [mapView setCenterCoordinate:planetaryHourAnnotation.coordinate animated:TRUE];
+//        }
+//    });
+//    dispatch_resume(planetaryHourAnnotation.timer);
 };
 
 - (void)mapView:(MKMapView *)mapView didSelectAnnotationView:(MKAnnotationView *)view
 {
-    [mapView.selectedAnnotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ([(MKPointAnnotation *)obj respondsToSelector:@selector(setSelected:)])
-            [(MKPointAnnotation *)obj setSelected:[NSNumber numberWithBool:TRUE]];
-    }];
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    [mapView.selectedAnnotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//        if (![view isEqual:[mapView viewForAnnotation:obj]])
+//            [mapView deselectAnnotation:obj animated:FALSE];
+//        }];
 }
 
 - (void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view
 {
-    [mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-        if ([(MKPointAnnotation *)obj respondsToSelector:@selector(setSelected:)])
-            [(MKPointAnnotation *)obj setSelected:[NSNumber numberWithBool:FALSE]];
-    }];
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    [mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+//        if ([view isEqual:[mapView viewForAnnotation:obj]])
+//            [mapView deselectAnnotation:obj animated:FALSE];
+//    }];
 }
 
 - (void)mapView:(MKMapView *)mapView didUpdateUserLocation:(MKUserLocation *)userLocation
@@ -165,8 +225,7 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
     {
         [mapView removeAnnotations:[mapView annotations]];
         [self.modelController.events enumerateObjectsUsingBlock:^(EKEvent * _Nonnull event, NSUInteger hour, BOOL * _Nonnull stop) {
-            __weak typeof(UILabel *) w_timeLabel = self.timeLabel;
-            addPlanetaryHourAnnotation(w_timeLabel, hour, event.title, event.notes, userLocation.location, mapView);
+            addPlanetaryHourAnnotation(hour, event.title, event.notes, userLocation.location, mapView);
         }];
         lastUserLocation = userLocation;
     }
@@ -196,48 +255,6 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
 //
 //    return renderer;
 //}
-
-- (void)addChild:(UIViewController *)childToAdd withChildToRemove:(UIViewController *)childToRemove
-{
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    if (childToRemove != nil)
-    {
-        if ([childToRemove isKindOfClass:[UIPageViewController class]]) {
-            [childToRemove.view removeFromSuperview];
-            [childToRemove removeFromParentViewController];
-        }
-    }
-    
-    if (childToAdd != nil)
-    {
-        [self addChildViewController:childToAdd];
-        [childToAdd didMoveToParentViewController:self];
-        
-        if ([childToAdd isKindOfClass:[UIPageViewController class]]) {
-            
-            CGRect pageViewRect = self.containerView.bounds;
-            if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
-                pageViewRect = CGRectInset(pageViewRect, 40.0, 0.0);
-            }
-            childToAdd.view.frame = pageViewRect;
-            
-            [self.containerView addSubview:childToAdd.view];
-        }
-    }
-    
-    NSLog(@"Number of child view controllers: %lu", self.childViewControllers.count);
-}
-
-
-- (ModelController *)modelController {
-    // Return the model controller object, creating it if necessary.
-    // In more complex implementations, the model controller may be passed to the view controller.
-    if (!_modelController) {
-        _modelController = [[ModelController alloc] init];
-    }
-    return _modelController;
-}
-
 
 #pragma mark - UIPageViewController delegate methods
 
@@ -275,23 +292,21 @@ void(^addPlanetaryHourAnnotation)(UILabel *, NSInteger, NSString *, NSString *, 
 {
     [pendingViewControllers enumerateObjectsUsingBlock:^(DataViewController * _Nonnull dataViewController, NSUInteger idx, BOOL * _Nonnull stop) {
         NSUInteger index = [self.modelController indexOfViewController:dataViewController];
-        [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            MKPointAnnotation *annotation = (MKPointAnnotation *)obj;
-            if ([((MKPointAnnotation *)annotation) respondsToSelector:@selector(planetaryHour)])
+        [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull annotation, NSUInteger idx, BOOL * _Nonnull stop) {
+            if ([annotation isKindOfClass:[MKPointAnnotation class]] && [annotation respondsToSelector:@selector(planetaryHour)])
             {
-                if ([(MKPointAnnotation *)annotation planetaryHour].unsignedIntegerValue == index + 1) {
+                if ([(MKPointAnnotation *)annotation planetaryHour].unsignedIntegerValue == index) {
+                    [self.mapView.selectedAnnotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull selectedAnnotation, NSUInteger idx, BOOL * _Nonnull stop) {
+                        [self.mapView deselectAnnotation:selectedAnnotation animated:FALSE];
+                    }];
+                    [self.mapView setRegion:MKCoordinateRegionMake(annotation.coordinate, MKCoordinateSpanMake(10.0001, 10.0001))];
+                    [self.mapView selectAnnotation:annotation animated:FALSE];
                     *stop = TRUE;
-                    
-                    NSLog(@"Reposition map view...");
-                    [self.mapView setCenterCoordinate:annotation.coordinate];
-                    [self.mapView setSelectedAnnotations:@[annotation]];
-                    [self mapView:self.mapView didSelectAnnotationView:[self.mapView viewForAnnotation:annotation]];
                 }
             }
         }];
     }];
 }
-
 
 @end
 

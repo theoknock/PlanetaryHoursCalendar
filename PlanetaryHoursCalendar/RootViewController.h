@@ -10,12 +10,14 @@
 #import <MapKit/MapKit.h>
 #import <CoreLocation/CoreLocation.h>
 
-@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate>
+@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate, DateTimePickerViewControllerDelegate>
 
 @property (strong, nonatomic) UIPageViewController *pageViewController;
 @property (weak, nonatomic) IBOutlet UIView *containerView;
 @property (weak, nonatomic) IBOutlet MKMapView *mapView;
-@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet UIDatePicker *datePicker;
+
+- (void)dateTimePickerDidChangeDate:(NSDate *)date;
 
 @end
 

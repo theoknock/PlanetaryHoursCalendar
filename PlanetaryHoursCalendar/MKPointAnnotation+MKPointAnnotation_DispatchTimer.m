@@ -10,7 +10,7 @@
 
 @implementation MKPointAnnotation (MKPointAnnotation_DispatchTimer)
 
-@dynamic timer, planetaryHour, selected;
+@dynamic timer, planetaryHour;
 
 - (void)setTimer:(dispatch_source_t)timer
 {
@@ -30,16 +30,6 @@
 - (NSNumber *)planetaryHour
 {
     return objc_getAssociatedObject(self, @selector(planetaryHour));
-}
-
--(void)setSelected:(NSNumber *)selected
-{
-    objc_setAssociatedObject(self, @selector(selected), selected, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-- (NSNumber *)selected
-{
-    return objc_getAssociatedObject(self, @selector(selected));
 }
 
 @end

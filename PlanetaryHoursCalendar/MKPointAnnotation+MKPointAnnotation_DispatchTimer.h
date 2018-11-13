@@ -16,7 +16,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, strong) NSNumber *planetaryHour;
-@property (nonatomic, strong) NSNumber *selected;
 
 @end
 
