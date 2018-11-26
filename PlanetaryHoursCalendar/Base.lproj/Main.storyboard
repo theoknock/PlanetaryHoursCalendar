@@ -19,7 +19,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="hybridFlyover" showsUserLocation="YES" showsPointsOfInterest="NO" showsScale="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I3h-X9-ebG">
-                                <rect key="frame" x="0.0" y="414" width="414" height="448"/>
+                                <rect key="frame" x="0.0" y="-34" width="414" height="896"/>
                                 <connections>
                                     <outlet property="delegate" destination="703-4V-yAM" id="ZAC-x3-SGL"/>
                                 </connections>
@@ -28,25 +28,27 @@
                                 <rect key="frame" x="0.0" y="44" width="414" height="358.33333333333331"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </containerView>
-                            <slider opaque="NO" alpha="0.5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="86400" translatesAutoresizingMaskIntoConstraints="NO" id="uyd-dT-EsS">
-                                <rect key="frame" x="18.666666666666657" y="832" width="376.66666666666674" height="31"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <datePicker contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="1" translatesAutoresizingMaskIntoConstraints="NO" id="fJi-dq-sJM">
+                                <rect key="frame" x="0.0" y="646" width="414" height="216"/>
+                                <date key="date" timeIntervalSinceReferenceDate="564851994.19635296">
+                                    <!--2018-11-25 15:19:54 +0000-->
+                                </date>
                                 <connections>
-                                    <action selector="elapseTime:" destination="703-4V-yAM" eventType="valueChanged" id="x7Q-Jh-rTT"/>
+                                    <action selector="changeDate:" destination="703-4V-yAM" eventType="valueChanged" id="Umv-HA-DOb"/>
                                 </connections>
-                            </slider>
+                            </datePicker>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="04K-aN-Qnh"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="18B-Nc-DJC"/>
+                            <constraint firstItem="fJi-dq-sJM" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="4vL-mZ-zuW"/>
                             <constraint firstItem="iAZ-4m-2z3" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="9Gh-iD-Zca"/>
-                            <constraint firstItem="uyd-dT-EsS" firstAttribute="width" secondItem="I3h-X9-ebG" secondAttribute="width" multiplier="0.9" id="9wR-sZ-z5R"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.4" id="G5C-4b-cB9"/>
-                            <constraint firstItem="uyd-dT-EsS" firstAttribute="centerX" secondItem="I3h-X9-ebG" secondAttribute="centerX" id="LMd-kU-UjC"/>
+                            <constraint firstItem="fJi-dq-sJM" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="NFM-va-hT1"/>
+                            <constraint firstItem="fJi-dq-sJM" firstAttribute="centerX" secondItem="iAZ-4m-2z3" secondAttribute="centerX" id="QKo-oN-fae"/>
                             <constraint firstItem="I3h-X9-ebG" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="asH-UJ-ubr"/>
-                            <constraint firstItem="I3h-X9-ebG" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" multiplier="0.5" id="oLD-iS-8RD"/>
-                            <constraint firstItem="uyd-dT-EsS" firstAttribute="bottom" secondItem="I3h-X9-ebG" secondAttribute="bottom" id="oul-N9-3wm"/>
+                            <constraint firstItem="I3h-X9-ebG" firstAttribute="height" secondItem="502-Ir-ELC" secondAttribute="height" id="oLD-iS-8RD"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="top" secondItem="iAZ-4m-2z3" secondAttribute="top" id="uGO-fz-owy"/>
                             <constraint firstItem="cwB-Nb-HZ0" firstAttribute="width" secondItem="502-Ir-ELC" secondAttribute="width" id="zZu-l5-J9Q"/>
                         </constraints>
@@ -54,8 +56,8 @@
                     </view>
                     <connections>
                         <outlet property="containerView" destination="cwB-Nb-HZ0" id="dc9-6L-aNA"/>
+                        <outlet property="datePicker" destination="fJi-dq-sJM" id="XPO-jg-pUi"/>
                         <outlet property="mapView" destination="I3h-X9-ebG" id="WJx-Ud-MGO"/>
-                        <outlet property="timeSlider" destination="uyd-dT-EsS" id="Mb7-kB-eiy"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Q3h-pU-vEd" sceneMemberID="firstResponder"/>

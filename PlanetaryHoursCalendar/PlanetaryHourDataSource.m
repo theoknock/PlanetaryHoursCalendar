@@ -238,6 +238,7 @@ NSString *(^planetSymbolForHour)(NSDate * _Nullable, NSUInteger) = ^(NSDate * _N
 - (void)dealloc
 {
     [self.locationManager stopMonitoringSignificantLocationChanges];
+    sharedDataSource = nil;
 }
 
 #pragma mark - String-matching methods

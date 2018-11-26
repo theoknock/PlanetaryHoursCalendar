@@ -22,6 +22,7 @@
 - (void)timePickerDidChange:(NSTimeInterval)time;
 - (NSDate *)pickerDate;
 - (NSTimeInterval)pickerTime;
+@property (weak, nonatomic) IBOutlet UIDatePicker *datePicker;
 
 @end
 
