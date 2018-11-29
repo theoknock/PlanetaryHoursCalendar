@@ -15,10 +15,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MKPointAnnotation (MKPointAnnotation_DispatchTimer)
 
+- (instancetype)initWithPlanetaryHour:(NSInteger)hour updateLocationUsingBlock:(dispatch_block_t)updateLocationBlock;
+
 @property (nonatomic, strong) dispatch_source_t timer;
 @property (nonatomic, strong) NSNumber *planetaryHour;
 @property (nonatomic, strong) CLLocation *sunriseLocation;
 @property (nonatomic, strong) FESSolarCalculator *solarCalculation;
+@property (nonatomic, strong) dispatch_block_t updateLocationBlock;
 
 @end
 

@@ -10,18 +10,13 @@
 #import <MapKit/MapKit.h>
 #import <CoreLocation/CoreLocation.h>
 
-#import "DateTimePickerViewController.h"
+#import "SnappingSlider.h"
 
-@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate, DateTimePickerViewControllerDelegate>
+@interface RootViewController : UIViewController <UIPageViewControllerDelegate, MKMapViewDelegate, SnappingSliderDelegate>
 
 @property (strong, nonatomic) UIPageViewController *pageViewController;
 @property (weak, nonatomic) IBOutlet UIView *containerView;
 @property (weak, nonatomic) IBOutlet MKMapView *mapView;
-@property (weak, nonatomic) IBOutlet UISlider *timeSlider;
-- (void)datePickerDidChange:(NSDate *)date;
-- (void)timePickerDidChange:(NSTimeInterval)time;
-- (NSDate *)pickerDate;
-- (NSTimeInterval)pickerTime;
 @property (weak, nonatomic) IBOutlet UIDatePicker *datePicker;
 
 @end

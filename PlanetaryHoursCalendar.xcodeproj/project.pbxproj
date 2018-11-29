@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B921932421ADD04A00D74E07 /* PlanetaryHourAnnotations.m in Sources */ = {isa = PBXBuildFile; fileRef = B921932321ADD04A00D74E07 /* PlanetaryHourAnnotations.m */; };
+		B925476F21AF5FC20001D43A /* SnappingSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = B925476D21AF5FC10001D43A /* SnappingSlider.m */; };
 		B92815662183AB59002177E0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B92815652183AB59002177E0 /* AppDelegate.m */; };
 		B92815692183AB59002177E0 /* RootViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B92815682183AB59002177E0 /* RootViewController.m */; };
 		B928156C2183AB59002177E0 /* DataViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B928156B2183AB59002177E0 /* DataViewController.m */; };
@@ -25,6 +27,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B921932221ADD04A00D74E07 /* PlanetaryHourAnnotations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PlanetaryHourAnnotations.h; path = PlanetaryHoursCalendar/PlanetaryHourAnnotations.h; sourceTree = "<group>"; };
+		B921932321ADD04A00D74E07 /* PlanetaryHourAnnotations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = PlanetaryHourAnnotations.m; path = PlanetaryHoursCalendar/PlanetaryHourAnnotations.m; sourceTree = "<group>"; wrapsLines = 0; };
+		B925476D21AF5FC10001D43A /* SnappingSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SnappingSlider.m; sourceTree = "<group>"; wrapsLines = 0; };
+		B925476E21AF5FC20001D43A /* SnappingSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SnappingSlider.h; sourceTree = "<group>"; };
 		B92815612183AB59002177E0 /* PlanetaryHoursCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanetaryHoursCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B92815642183AB59002177E0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B92815652183AB59002177E0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -71,6 +77,10 @@
 			children = (
 				B9F1DD312192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.h */,
 				B9F1DD322192319700728895 /* MKPointAnnotation+MKPointAnnotation_DispatchTimer.m */,
+				B921932221ADD04A00D74E07 /* PlanetaryHourAnnotations.h */,
+				B921932321ADD04A00D74E07 /* PlanetaryHourAnnotations.m */,
+				B925476E21AF5FC20001D43A /* SnappingSlider.h */,
+				B925476D21AF5FC10001D43A /* SnappingSlider.m */,
 				B92815632183AB59002177E0 /* PlanetaryHoursCalendar */,
 				B92815622183AB59002177E0 /* Products */,
 				B92815802183D699002177E0 /* Frameworks */,
@@ -191,6 +201,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B925476F21AF5FC20001D43A /* SnappingSlider.m in Sources */,
+				B921932421ADD04A00D74E07 /* PlanetaryHourAnnotations.m in Sources */,
 				B92D3BAB2186F94E00D72791 /* FESSolarCalculator.m in Sources */,
 				B928157A2183AB5A002177E0 /* main.m in Sources */,
 				B99CFFD6219AAE3800A145EC /* DateTimePickerViewController.m in Sources */,

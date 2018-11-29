@@ -117,7 +117,7 @@ NSString *(^planetNameForDay)(NSDate * _Nullable) = ^(NSDate * _Nullable date)
             return @"Mars";
             break;
         case WED:
-            return @"Venus";
+            return @"Mercury";
             break;
         case THU:
             return @"Jupiter";
@@ -150,7 +150,7 @@ NSString *(^planetNameForHour)(NSDate * _Nullable, NSUInteger) = ^(NSDate * _Nul
             return @"Mars";
             break;
         case Mercury:
-            return @"Venus";
+            return @"Mercury";
             break;
         case Jupiter:
             return @"Jupiter";
@@ -631,7 +631,7 @@ EKEvent *(^planetaryHourEvent)(NSUInteger, EKEventStore *, EKCalendar *, NSArray
             NSLog(@"Access to event store denied: %@", error.description);
         }
     }];
-}
+        }
 
 //- (NSArray *)planetaryHoursEventsForDate:(NSDate *)date location:(CLLocation *)location
 //{

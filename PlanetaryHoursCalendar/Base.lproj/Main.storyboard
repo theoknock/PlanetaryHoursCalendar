@@ -33,9 +33,6 @@
                                 <date key="date" timeIntervalSinceReferenceDate="564851994.19635296">
                                     <!--2018-11-25 15:19:54 +0000-->
                                 </date>
-                                <connections>
-                                    <action selector="changeDate:" destination="703-4V-yAM" eventType="valueChanged" id="Umv-HA-DOb"/>
-                                </connections>
                             </datePicker>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
