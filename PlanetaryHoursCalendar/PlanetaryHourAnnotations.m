@@ -159,7 +159,6 @@ static PlanetaryHourAnnotations *annotations = NULL;
             NSDate *earlierDate = [_sunrise earlierDate:date];
             if ([earlierDate isEqualToDate:date])
             {
-                NSLog(@"Subtracting one day...");
                 NSCalendar *calendar =  [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
                 NSDateComponents *components = [[NSDateComponents alloc] init];
                 components.day = -1;
@@ -168,7 +167,6 @@ static PlanetaryHourAnnotations *annotations = NULL;
         }
         
         self.solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:_userLocation];
-        NSLog(@"Changing sunrise date...");
         [self setSunrise:self.solarCalculator.sunrise];
         NSTimeInterval seconds_in_day         = [self.solarCalculator.sunset timeIntervalSinceDate:self.solarCalculator.sunrise];
         NSTimeInterval seconds_in_night       = SECONDS_PER_DAY - seconds_in_day;
