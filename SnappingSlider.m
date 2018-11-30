@@ -7,6 +7,7 @@
 //
 
 #import "SnappingSlider.h"
+#import "PlanetaryHourAnnotations.h"
 
 @implementation SnappingSlider
 
@@ -53,6 +54,7 @@ static UIDynamicAnimator *(^dynamicAnimator)(UIView *, CGPoint, UIDynamicAnimato
 
 - (void)setup
 {
+    sliderValueChangesQueue = dispatch_queue_create_with_target("Slider Value Changes Queue", DISPATCH_QUEUE_CONCURRENT, dispatch_get_main_queue());
     self.incrementAndDecrementLabelFont = [UIFont fontWithName:@"TrebuchetMS-Bold" size:18.0];
     self.incrementAndDecrementLabelTextColor = [UIColor whiteColor];
     self.incrementAndDecrementBackgroundColor = [UIColor colorWithRed:0.36 green:0.65 blue:0.65 alpha:1.0];
@@ -151,9 +153,7 @@ static UIDynamicAnimator *(^dynamicAnimator)(UIView *, CGPoint, UIDynamicAnimato
 {
         if ([sender isKindOfClass:[UIPanGestureRecognizer class]])
         {
-            BOOL goingUp = FALSE;
-            
-            switch (sender.state) {
+           switch (sender.state) {
                 case UIGestureRecognizerStateBegan:
                 {
                     dragged = TRUE;
@@ -179,7 +179,6 @@ static UIDynamicAnimator *(^dynamicAnimator)(UIView *, CGPoint, UIDynamicAnimato
                             
                             if (dragged)
                             {
-                                goingUp = FALSE;
                                 [self.delegate snappingSliderDidDecrementValue:self];
                                 lastDelegateFireOffset = translatedCenterX;
                                 dragged = self.shouldContinueAlteringValueUntilGestureCancels;
@@ -192,20 +191,22 @@ static UIDynamicAnimator *(^dynamicAnimator)(UIView *, CGPoint, UIDynamicAnimato
                             
                             if (dragged)
                             {
-                                goingUp = TRUE;
                                 [self.delegate snappingSliderDidIncrementValue:self];
                                 lastDelegateFireOffset = translatedCenterX;
                                 dragged = self.shouldContinueAlteringValueUntilGestureCancels;
-                                goingUp = TRUE;
                             }
                         }
                     }
                     
                     if (self.shouldContinueAlteringValueUntilGestureCancels) {
                         if (translatedCenterX < lastDelegateFireOffset)
-                            [self.delegate snappingSliderDidDecrementValue:self];
+                            dispatch_async(sliderValueChangesQueue, ^{
+                              [self.delegate snappingSliderDidDecrementValue:self];
+                            });
                         else
-                            [self.delegate snappingSliderDidIncrementValue:self];
+                            dispatch_async(sliderValueChangesQueue, ^{
+                                [self.delegate snappingSliderDidIncrementValue:self];
+                            });
 //                        valueChangingTimer = [NSTimer timerWithTimeInterval:0.7 target:self selector:@selector(handleTimer:) userInfo:nil repeats:TRUE];
                     }
                     

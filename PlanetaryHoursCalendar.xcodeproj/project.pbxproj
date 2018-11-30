@@ -49,7 +49,7 @@
 		B92815822183D699002177E0 /* EventKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = EventKit.framework; path = System/Library/Frameworks/EventKit.framework; sourceTree = SDKROOT; };
 		B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlanetaryHourDataSource.m; sourceTree = "<group>"; wrapsLines = 0; };
 		B92D3B9221868C2D00D72791 /* PlanetaryHourDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlanetaryHourDataSource.h; sourceTree = "<group>"; wrapsLines = 0; };
-		B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FESSolarCalculator.m; sourceTree = "<group>"; };
+		B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FESSolarCalculator.m; sourceTree = "<group>"; wrapsLines = 0; };
 		B92D3BAA2186F94E00D72791 /* FESSolarCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FESSolarCalculator.h; sourceTree = "<group>"; };
 		B99CFFD4219AAE3800A145EC /* DateTimePickerViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DateTimePickerViewController.h; sourceTree = "<group>"; };
 		B99CFFD5219AAE3800A145EC /* DateTimePickerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimePickerViewController.m; sourceTree = "<group>"; wrapsLines = 0; };
@@ -102,8 +102,8 @@
 				B92D3BA92186F94E00D72791 /* FESSolarCalculator.m */,
 				B92D3B9221868C2D00D72791 /* PlanetaryHourDataSource.h */,
 				B92D3B9121868C2D00D72791 /* PlanetaryHourDataSource.m */,
-				B92815642183AB59002177E0 /* AppDelegate.h */,
 				B92815652183AB59002177E0 /* AppDelegate.m */,
+				B92815642183AB59002177E0 /* AppDelegate.h */,
 				B92815672183AB59002177E0 /* RootViewController.h */,
 				B92815682183AB59002177E0 /* RootViewController.m */,
 				B99CFFD4219AAE3800A145EC /* DateTimePickerViewController.h */,

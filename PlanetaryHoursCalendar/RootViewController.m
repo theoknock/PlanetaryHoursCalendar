@@ -43,7 +43,7 @@ static void *PlanetaryHourAnnotationContext = &PlanetaryHourAnnotationContext;
     [snappingSlider setShouldContinueAlteringValueUntilGestureCancels:TRUE];
     [self.mapView addSubview:snappingSlider];
     
-    [self.datePicker addTarget:self action:@selector(changeDate:) forControlEvents:UIControlEventAllEvents];
+//    [self.datePicker addTarget:self action:@selector(changeDate:) forControlEvents:UIControlEventAllEvents];
     [self.datePicker setBackgroundColor:[UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.33]];
 //    MKUserTrackingButton *button = [MKUserTrackingButton userTrackingButtonWithMapView:self.mapView];
 //    [button.layer setBorderWidth:1.0];
@@ -61,7 +61,7 @@ static void *PlanetaryHourAnnotationContext = &PlanetaryHourAnnotationContext;
 
 - (void)snappingSliderDidIncrementValue:(SnappingSlider *)snapSwitch
 {
-    [self.datePicker setDate:[self.datePicker.date dateByAddingTimeInterval:60]];
+    [self.datePicker setDate:[self.datePicker.date dateByAddingTimeInterval:60 * 60]];
     NSEnumerator *enumerator = [self.mapView.annotations objectEnumerator];
     id<MKAnnotation> annotation;
     while ((annotation = [enumerator nextObject])) {
@@ -74,7 +74,7 @@ static void *PlanetaryHourAnnotationContext = &PlanetaryHourAnnotationContext;
 
 - (void)snappingSliderDidDecrementValue:(SnappingSlider *)snapSwitch
 {
-    [self.datePicker setDate:[self.datePicker.date dateByAddingTimeInterval:-60]];
+    [self.datePicker setDate:[self.datePicker.date dateByAddingTimeInterval:-60 * 60]];
     NSEnumerator *enumerator = [self.mapView.annotations objectEnumerator];
     id<MKAnnotation> annotation;
     while ((annotation = [enumerator nextObject])) {
@@ -162,17 +162,17 @@ static void *PlanetaryHourAnnotationContext = &PlanetaryHourAnnotationContext;
 //    }
 //};
 
-- (IBAction)changeDate:(UIDatePicker *)sender {
-    NSLog(@"%s", __PRETTY_FUNCTION__);
-    dispatch_async(PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue, ^{
-        [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull planetaryHourAnnotation, NSUInteger hour, BOOL * _Nonnull stop) {
-            if ([planetaryHourAnnotation isKindOfClass:[MKPointAnnotation class]] && [planetaryHourAnnotation respondsToSelector:@selector(sunriseLocation)] && [planetaryHourAnnotation respondsToSelector:@selector(solarCalculation)])
-            {
-//                positionPlanetaryHourAnnotation(sender.date, (MKPointAnnotation *)planetaryHourAnnotation);
-            }
-        }];
-    });
-}
+//- (IBAction)changeDate:(UIDatePicker *)sender {
+//    NSLog(@"%s", __PRETTY_FUNCTION__);
+//    dispatch_async(PlanetaryHourDataSource.sharedDataSource.planetaryHourDataRequestQueue, ^{
+//        [self.mapView.annotations enumerateObjectsUsingBlock:^(id<MKAnnotation>  _Nonnull planetaryHourAnnotation, NSUInteger hour, BOOL * _Nonnull stop) {
+//            if ([planetaryHourAnnotation isKindOfClass:[MKPointAnnotation class]] && [planetaryHourAnnotation respondsToSelector:@selector(sunriseLocation)] && [planetaryHourAnnotation respondsToSelector:@selector(solarCalculation)])
+//            {
+////                positionPlanetaryHourAnnotation(sender.date, (MKPointAnnotation *)planetaryHourAnnotation);
+//            }
+//        }];
+//    });
+//}
 
 static NSDateIntervalFormatter *dateIntervalFormatter = NULL;
 - (NSDateIntervalFormatter *)dateIntervalFormatter

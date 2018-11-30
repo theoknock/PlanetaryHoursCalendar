@@ -10,6 +10,9 @@
 #import <MapKit/MapKit.h>
 #import <objc/runtime.h>
 
+#import "FESSolarCalculator.h"
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 typedef CLLocationCoordinate2D(^UpdateLocation)(NSDate *date);
@@ -40,9 +43,9 @@ typedef CLLocationCoordinate2D(^UpdateLocation)(NSDate *date);
 @property(readonly) double metersPerNightHour;
 - (void)setMetersPerNightHour:(double)metersPerNightHour;
 @property(assign, nonatomic, setter=setUserLocation:) CLLocation *userLocation;
-@property(readonly) NSDate *sunrise;
-- (void)setSunrise:(NSDate * _Nonnull)sunrise;
+@property(assign, nonatomic, setter=setSunrise:) NSDate *sunrise;
 - (NSTimeInterval)elapsedTime:(NSDate *)date;
+@property (strong, nonatomic) FESSolarCalculator *solarCalculator;
 @end
 
 NS_ASSUME_NONNULL_END

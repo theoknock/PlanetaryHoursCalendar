@@ -86,7 +86,7 @@ double const toDegrees = 180 / M_PI;
     return self;
 }
 
-- (id)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation
+- (instancetype)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation
 {
     self = [self init];
     if (self) {
@@ -97,7 +97,7 @@ double const toDegrees = 180 / M_PI;
     return self;
 }
 
-- (id)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation mask:(FESSolarCalculationType)inMask
+- (instancetype)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation mask:(FESSolarCalculationType)inMask
 {
     self = [self init];
     if (self) {
@@ -247,8 +247,8 @@ double const toDegrees = 180 / M_PI;
 + (int)julianDayNumberFromDate:(NSDate *)inDate
 {
     // calculation of Julian Day Number (http://en.wikipedia.org/wiki/Julian_day ) from Gregorian Date
-    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
-    NSDateComponents *components = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit fromDate:inDate];
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *components = [calendar components:NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay fromDate:inDate];
     int a = (14 - (int)[components month]) / 12;
     int y = (int)[components year] +  4800 - a;
     int m = (int)[components month] + (12 * a) - 3;
@@ -283,7 +283,7 @@ double const toDegrees = 180 / M_PI;
     double minutes = (timeValue - floor(timeValue)) * 60;
     components.minute = (int)floor(minutes);
     components.second = (int)((minutes - floor(minutes)) * 60);
-    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     NSDate *returnDate = [calendar dateFromComponents:components];
     return returnDate;
 }

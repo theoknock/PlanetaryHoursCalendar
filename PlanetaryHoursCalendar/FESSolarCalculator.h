@@ -55,8 +55,8 @@ typedef NSUInteger FESSolarCalculationType;
 @property (nonatomic, readonly, strong) NSDate *astronomicalDawn;
 @property (nonatomic, readonly, strong) NSDate *astronomicalDusk;
 
-- (id)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation;
-- (id)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation mask:(FESSolarCalculationType)inMask;
+- (instancetype)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation;
+- (instancetype)initWithDate:(NSDate *)inDate location:(CLLocation *)inLocation mask:(FESSolarCalculationType)inMask;
 
 // the following conversion methods are provided because of a bug
 // in NSDateFormatter's Julian Day Number converter

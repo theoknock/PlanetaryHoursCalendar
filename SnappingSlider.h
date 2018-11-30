@@ -39,6 +39,8 @@ typedef UIDynamicAnimator *_Nonnull(^SnapBehavior)(UIView *dynamicItem, CGPoint 
 
     CGPoint snappingPoint;
     CGPoint center_point;
+    
+    dispatch_queue_t sliderValueChangesQueue;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame title:(NSString *)title;

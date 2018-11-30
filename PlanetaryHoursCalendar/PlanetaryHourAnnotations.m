@@ -79,7 +79,7 @@ static PlanetaryHourAnnotations *annotations = NULL;
 //                          }
                           annotations = [[self alloc] init];//WithArray:(NSArray<MKPointAnnotation *> *)array];
                           [annotations setUserLocation:location];
-                          [annotations setSharedProperties];
+                          [annotations setSharedProperties:[NSDate date]];
                       }
                   });
     
@@ -103,26 +103,82 @@ static PlanetaryHourAnnotations *annotations = NULL;
     _userLocation = userLocation;
 }
 
-- (void)setSharedProperties
+- (FESSolarCalculator *)solarCalculationForDate:(NSDate *)date location:(CLLocation *)location
 {
-    FESSolarCalculator *solarCalculator   = [[FESSolarCalculator alloc] initWithDate:[NSDate date] location:_userLocation];
-    NSTimeInterval seconds_in_day         = [solarCalculator.sunset timeIntervalSinceDate:solarCalculator.sunrise];
+
+    if (!date) date = [NSDate date];
+  FESSolarCalculator *solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:location];
+    
+    NSDate *earlierDate = [solarCalculator.sunrise earlierDate:date];
+    if ([earlierDate isEqualToDate:date])
+    {
+        NSCalendar *calendar =  [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSDateComponents *components = [[NSDateComponents alloc] init];
+        components.day = -1;
+        NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+        solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:location];
+    }
+    
+    return solarCalculator;
+}
+
+
+- (void)setSharedProperties:(NSDate *)date
+{
+    if (!date) date = [NSDate date];
+    self.solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:_userLocation];
+    
+    NSDate *earlierDate = [self.solarCalculator.sunrise earlierDate:date];
+    if ([earlierDate isEqualToDate:date])
+    {
+        NSCalendar *calendar =  [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        NSDateComponents *components = [[NSDateComponents alloc] init];
+        components.day = -1;
+        NSDate *yesterday = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+        self.solarCalculator = [[FESSolarCalculator alloc] initWithDate:yesterday location:_userLocation];
+    }
+    
+    NSTimeInterval seconds_in_day         = [self.solarCalculator.sunset timeIntervalSinceDate:self.solarCalculator.sunrise];
     NSTimeInterval seconds_in_night       = SECONDS_PER_DAY - seconds_in_day;
     double earth_rotation_mps             = MKMapSizeWorld.width / SECONDS_PER_DAY;
     double meters_per_day                 = seconds_in_day   * earth_rotation_mps;
     double meters_per_night               = seconds_in_night * earth_rotation_mps;
     [self setMetersPerDayHour:meters_per_day / HOURS_PER_SOLAR_TRANSIT];
     [self setMetersPerNightHour:meters_per_night / HOURS_PER_SOLAR_TRANSIT];
-    [self setSunrise:solarCalculator.sunrise];
+    [self setSunrise:self.solarCalculator.sunrise];
 }
 
 - (NSTimeInterval)elapsedTime:(NSDate *)date
 {
     NSTimeInterval elapsedTime = [date timeIntervalSinceDate:_sunrise];
-    if (elapsedTime > 86400)
+    
+    if (elapsedTime < 0 || elapsedTime > SECONDS_PER_DAY)
     {
-        [self setSharedProperties];
-        elapsedTime = [[NSDate date] timeIntervalSinceDate:_sunrise];
+        if (elapsedTime > -SECONDS_PER_DAY)
+        {
+            NSDate *earlierDate = [_sunrise earlierDate:date];
+            if ([earlierDate isEqualToDate:date])
+            {
+                NSLog(@"Subtracting one day...");
+                NSCalendar *calendar =  [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+                NSDateComponents *components = [[NSDateComponents alloc] init];
+                components.day = -1;
+                date = [calendar dateByAddingComponents:components toDate:date options:NSCalendarMatchNextTimePreservingSmallerUnits];
+            }
+        }
+        
+        self.solarCalculator = [[FESSolarCalculator alloc] initWithDate:date location:_userLocation];
+        NSLog(@"Changing sunrise date...");
+        [self setSunrise:self.solarCalculator.sunrise];
+        NSTimeInterval seconds_in_day         = [self.solarCalculator.sunset timeIntervalSinceDate:self.solarCalculator.sunrise];
+        NSTimeInterval seconds_in_night       = SECONDS_PER_DAY - seconds_in_day;
+        double earth_rotation_mps             = MKMapSizeWorld.width / SECONDS_PER_DAY;
+        double meters_per_day                 = seconds_in_day   * earth_rotation_mps;
+        double meters_per_night               = seconds_in_night * earth_rotation_mps;
+        [self setMetersPerDayHour:meters_per_day / HOURS_PER_SOLAR_TRANSIT];
+        [self setMetersPerNightHour:meters_per_night / HOURS_PER_SOLAR_TRANSIT];
+        
+        elapsedTime = [date timeIntervalSinceDate:_sunrise];
     }
     
     return elapsedTime;
@@ -172,9 +228,13 @@ static PlanetaryHourAnnotations *annotations = NULL;
               MKMapPoint planetary_hour_origin = MKMapPointMake((index < HOURS_PER_SOLAR_TRANSIT)
                                                                 ? user_location_map_point.x + (_metersPerDayHour * annotation.planetaryHour.doubleValue)
                                                                 : user_location_map_point.x + ((_metersPerDayHour * 12) + (_metersPerNightHour * (annotation.planetaryHour.integerValue % 12))), user_location_map_point.y);
+              MKMapPoint planetary_hour_origin_offset = MKMapPointMake(planetary_hour_origin.x - ([self elapsedTime:[NSDate date]] * MKMapSizeWorld.width / SECONDS_PER_DAY), planetary_hour_origin.y);
+              CLLocationCoordinate2D planetary_hour_origin_offset_coordinate = MKCoordinateForMapPoint(planetary_hour_origin_offset);
+              [annotation setCoordinate:planetary_hour_origin_offset_coordinate];
               
-              [annotation setUpdateLocationBlock:^CLLocationCoordinate2D(NSDate * _Nonnull date) {
-                  MKMapPoint planetary_hour_origin_offset = MKMapPointMake(planetary_hour_origin.x - ([self elapsedTime:date] * MKMapSizeWorld.width / SECONDS_PER_DAY), planetary_hour_origin.y);
+             [annotation setUpdateLocationBlock:^CLLocationCoordinate2D(NSDate * _Nonnull date) {
+                 
+                MKMapPoint planetary_hour_origin_offset = MKMapPointMake(planetary_hour_origin.x - ([self elapsedTime:date] * MKMapSizeWorld.width / SECONDS_PER_DAY), planetary_hour_origin.y);
                   CLLocationCoordinate2D planetary_hour_origin_offset_coordinate = MKCoordinateForMapPoint(planetary_hour_origin_offset);
                   
                   return planetary_hour_origin_offset_coordinate;
